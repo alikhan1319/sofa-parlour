@@ -1,0 +1,233 @@
+{%- comment -%}
+  ============================================================
+  Split feature — copy against a bleeding image
+  ============================================================
+
+  The image runs off the outer edge of the viewport rather than sitting in
+  the container. That single decision is most of the difference between this
+  and a stock two-column band: a boxed image reads as a slide, an image that
+  leaves the frame reads as editorial.
+
+  It is built with one grid, not two floats, so the copy column stays
+  aligned to the page gutter while the media column escapes it. Below the
+  breakpoint the image simply stacks, still full-bleed.
+
+  Points are blocks, so a merchant can add or drop reasons without touching
+  the copy.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-split.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign inset = section.settings.media_inset | default: 32
+  assign flush_class = ''
+  if inset == 0
+    assign flush_class = ' sp-split--flush'
+  endif
+
+  assign img_d = section.settings.image
+  assign img_m = section.settings.image_mobile | default: img_d
+  assign points = section.blocks | where: 'type', 'point'
+
+  assign alt_text = section.settings.image_alt
+  if alt_text == blank
+    assign alt_text = img_d.alt | default: section.settings.heading
+  endif
+-%}
+
+<section
+  class="sp-split sp-split--{{ section.settings.media_side }} sp-split--{{ section.settings.scheme }} sp-split--{{ section.settings.image_fit | default: 'contain' }}{{ flush_class }}"
+  id="sp-split-{{ section.id }}"
+  style="
+    --sp-split-ratio: {{ section.settings.image_ratio | default: '4 / 3' }};
+    --sp-split-h: {{ section.settings.row_height | default: 520 }}px;
+    --sp-split-inset: {{ section.settings.media_inset | default: 32 }}px;
+    --sp-split-pad-t: {{ section.settings.padding_top | default: 0 }}px;
+    --sp-split-pad-b: {{ section.settings.padding_bottom | default: 0 }}px;
+  "
+>
+  <div class="sp-split__inner">
+    <div class="sp-split__copy" data-sp-reveal>
+      <div class="sp-split__copy-in">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="sp-split__eyebrow">
+            <span class="sp-split__rule" aria-hidden="true"></span>
+            {{ section.settings.eyebrow | escape }}
+          </p>
+        {%- endif -%}
+
+        {%- if section.settings.heading != blank -%}
+          <h2 class="sp-split__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+
+        {%- if section.settings.text != blank -%}
+          <p class="sp-split__text">{{ section.settings.text | escape }}</p>
+        {%- endif -%}
+
+        {%- if points.size > 0 -%}
+          <ul class="sp-split__points" role="list">
+            {%- for block in points -%}
+              <li class="sp-split__point" {{ block.shopify_attributes }}>
+                {%- if block.settings.value != blank -%}
+                  <span class="sp-split__point-value">{{ block.settings.value | escape }}</span>
+                {%- endif -%}
+                <span class="sp-split__point-label">{{ block.settings.label | escape }}</span>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        {%- if section.settings.button_label != blank or section.settings.link_label != blank -%}
+          <div class="sp-split__actions">
+            {%- if section.settings.button_label != blank -%}
+              <a
+                class="sp-split__btn"
+                {% if section.settings.button_link != blank %}href="{{ section.settings.button_link }}"{% else %}role="link" aria-disabled="true"{% endif %}
+              >
+                {{ section.settings.button_label | escape }}
+              </a>
+            {%- endif -%}
+
+            {%- if section.settings.link_label != blank -%}
+              <a
+                class="sp-split__ghost"
+                {% if section.settings.link_url != blank %}href="{{ section.settings.link_url }}"{% else %}role="link" aria-disabled="true"{% endif %}
+              >
+                <span>{{ section.settings.link_label | escape }}</span>
+                <span class="sp-split__ghost-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </a>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <div class="sp-split__media" data-sp-reveal>
+      {%- if img_d != blank -%}
+        <picture class="sp-split__pic">
+          {%- if img_m != blank -%}
+            {%- capture srcset_m -%}
+              {{ img_m | image_url: width: 600 }} 600w,
+              {{ img_m | image_url: width: 900 }} 900w,
+              {{ img_m | image_url: width: 1200 }} 1200w
+            {%- endcapture -%}
+            <source media="(max-width: 899px)" srcset="{{ srcset_m | strip_newlines }}" sizes="100vw">
+          {%- endif -%}
+          {%- capture srcset_d -%}
+            {{ img_d | image_url: width: 800 }} 800w,
+            {{ img_d | image_url: width: 1200 }} 1200w,
+            {{ img_d | image_url: width: 1600 }} 1600w,
+            {{ img_d | image_url: width: 2000 }} 2000w
+          {%- endcapture -%}
+          <source media="(min-width: 900px)" srcset="{{ srcset_d | strip_newlines }}" sizes="55vw">
+          <img
+            class="sp-split__img"
+            src="{{ img_d | image_url: width: 1600 }}"
+            alt="{{ alt_text | escape }}"
+            width="{{ img_d.width }}"
+            height="{{ img_d.height }}"
+            loading="lazy"
+            decoding="async"
+          >
+        </picture>
+      {%- else -%}
+        <span class="sp-split__ph" role="img" aria-label="{{ alt_text | escape }}"></span>
+      {%- endif -%}
+
+      {%- if section.settings.badge_text != blank -%}
+        <span class="sp-split__badge">{{ section.settings.badge_text | escape }}</span>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Split feature",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Best sellers" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your favourite seat is waiting" },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "Discover the sofas everyone comes back to. Made to order, delivered to the room of your choice." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop best sellers" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "text", "id": "link_label", "label": "Secondary link label" },
+    { "type": "url", "id": "link_url", "label": "Secondary link" },
+    { "type": "header", "content": "Image" },
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "image_picker", "id": "image_mobile", "label": "Image, small screens", "info": "Falls back to the main image." },
+    { "type": "text", "id": "image_alt", "label": "Image description" },
+    { "type": "text", "id": "badge_text", "label": "Badge", "info": "Small label pinned to the image. Leave empty to hide." },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        { "value": "4 / 3", "label": "Landscape 4:3" },
+        { "value": "3 / 2", "label": "Classic 3:2" },
+        { "value": "1 / 1", "label": "Square" },
+        { "value": "4 / 5", "label": "Portrait 4:5" }
+      ],
+      "default": "4 / 3"
+    },
+    {
+      "type": "select",
+      "id": "media_side",
+      "label": "Image side",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "info": "Contain shows the whole photograph. Cover fills the frame and crops.",
+      "options": [
+        { "value": "contain", "label": "Show the whole image" },
+        { "value": "cover", "label": "Fill the frame" }
+      ],
+      "default": "contain"
+    },
+    { "type": "range", "id": "row_height", "label": "Section height", "min": 360, "max": 760, "step": 20, "unit": "px", "default": 520 },
+    { "type": "range", "id": "media_inset", "label": "Space around the image", "info": "Set to 0 to let the image run to the edge of the screen.", "min": 0, "max": 64, "step": 4, "unit": "px", "default": 32 },
+    { "type": "header", "content": "Appearance" },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Background",
+      "options": [
+        { "value": "espresso", "label": "Espresso" },
+        { "value": "surface", "label": "Lifted brown" },
+        { "value": "cream", "label": "Cream" }
+      ],
+      "default": "espresso"
+    },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 0 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 0 }
+  ],
+  "blocks": [
+    {
+      "type": "point",
+      "name": "Point",
+      "settings": [
+        { "type": "text", "id": "value", "label": "Value", "info": "e.g. 10 years" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Guarantee" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Split feature",
+      "blocks": [{ "type": "point" }, { "type": "point" }, { "type": "point" }]
+    }
+  ]
+}
+{% endschema %}

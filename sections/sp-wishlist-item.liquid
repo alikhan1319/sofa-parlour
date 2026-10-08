@@ -1,0 +1,128 @@
+{%- comment -%}
+  ============================================================
+  Wishlist row — one saved product
+  ============================================================
+
+  Fetched with Shopify's Section Rendering API, one request per saved item:
+
+      /products/{handle}?section_id=sp-wishlist-item
+
+  WHY FETCH AT ALL, when the browser already knows what was saved?
+
+  Because the only thing worth storing locally is WHICH products were saved,
+  never what they cost. A price cached at save time is a price that goes
+  stale — the shopper comes back a month later and the drawer quotes them a
+  figure the shop no longer honours. Everything perishable (price, sale
+  status, availability, money format, translation) is rendered here, by the
+  same Liquid the product page uses, at the moment the drawer opens.
+
+  localStorage holds the id and the handle. Nothing else.
+  ============================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign v = product.selected_or_first_available_variant
+
+  assign on_sale = false
+  if v.compare_at_price > v.price
+    assign on_sale = true
+  endif
+
+  comment
+    Quick-add is only offered where there is genuinely nothing to choose.
+    A one-click add on a product with fabric options would be picking the
+    shopper's fabric for them.
+  endcomment
+  assign single = false
+  if product.variants.size == 1 and v.available
+    assign single = true
+  endif
+
+  comment
+    A product whose variants differ in price would otherwise show one bare
+    figure — the cheapest — as if it were the price. Formatting has to happen
+    BEFORE the translation is applied: `t` returns a finished string, so
+    piping money afterwards would print the raw pennies.
+  endcomment
+  assign price_display = v.price | money
+  if product.price_varies
+    assign cheapest = product.price_min | money
+    assign price_display = 'products.product.price.from_price_html' | t: price: cheapest
+  endif
+-%}
+
+<div class="sp-wl__item" data-sp-wl-item>
+  <a class="sp-wl__media" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+    {%- if product.featured_media -%}
+      {%- assign m_alt = '' -%}
+      {{
+        product.featured_media
+        | image_url: width: 300
+        | image_tag: class: 'sp-wl__img', widths: '120, 200, 300', sizes: '84px', loading: 'lazy', alt: m_alt
+      }}
+    {%- else -%}
+      <span class="sp-wl__ph"></span>
+    {%- endif -%}
+  </a>
+
+  <div class="sp-wl__detail">
+    <div class="sp-wl__head">
+      <div class="sp-wl__copy">
+        {%- if product.vendor != blank -%}
+          <p class="sp-wl__vendor">{{ product.vendor | escape }}</p>
+        {%- endif -%}
+        <a class="sp-wl__name" href="{{ product.url }}">{{ product.title | escape }}</a>
+      </div>
+
+      <button
+        type="button"
+        class="sp-wl__remove"
+        data-sp-wl-remove="{{ product.id }}"
+        aria-label="{{ 'sections.cart.remove_title' | t: title: product.title }}"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="sp-wl__prices">
+      <span class="sp-wl__now">{{ price_display }}</span>
+      {%- if on_sale and product.price_varies == false -%}
+        <s class="sp-wl__was">{{ v.compare_at_price | money }}</s>
+      {%- endif -%}
+    </p>
+
+    {%- if product.available -%}
+      {%- if single -%}
+        {%- form 'product', product, class: 'sp-wl__form', novalidate: 'novalidate' -%}
+          <input type="hidden" name="id" value="{{ v.id }}">
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit" class="sp-wl__add" data-sp-quickadd>
+            {{ 'products.product.add_to_cart' | t }}
+          </button>
+        {%- endform -%}
+      {%- else -%}
+        {%- comment -%}
+          Deliberately a link to the product page, not the quick view. The
+          quick view is itself an overlay, and stacking one on top of this
+          drawer would leave the shopper two layers deep with two close
+          buttons. Choosing a fabric is a considered act — the product page
+          is the right place for it.
+        {%- endcomment -%}
+        <a class="sp-wl__add sp-wl__add--options" href="{{ product.url }}">
+          {{ 'products.product.choose_options' | t }}
+        </a>
+      {%- endif -%}
+    {%- else -%}
+      <p class="sp-wl__soldout">{{ 'products.product.sold_out' | t }}</p>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Wishlist row",
+  "settings": []
+}
+{% endschema %}

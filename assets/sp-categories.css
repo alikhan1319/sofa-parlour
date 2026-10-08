@@ -1,0 +1,375 @@
+/* ============================================================
+   Categories — tinted panels
+   ============================================================
+
+   The panel colour comes from the block; the type colour is decided in
+   Liquid from that colour's brightness and arrives as .sp-cats__card--dark
+   or --light. Nothing here hard-codes a text colour against a background it
+   cannot see.
+
+   Hedvig Letters Sans has one weight, so the title earns its weight from
+   size, uppercase and tight tracking rather than from bold.
+   ============================================================ */
+
+.sp-cats {
+  --sp-bg: #ffffff;
+  --sp-fg: #1f1a16;
+  --sp-brass: #9a5d06;
+  --sp-fg-64: rgba(31, 26, 22, 0.72);
+
+  --sp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --sp-fast: 180ms;
+  --sp-base: 260ms;
+  --sp-slow: 520ms;
+
+  padding: var(--sp-cats-pad-t, 72px) 0 var(--sp-cats-pad-b, 88px);
+  background: var(--sp-bg);
+  color: var(--sp-fg);
+}
+
+.sp-cats__wrap {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-inline: clamp(1.6rem, 4vw, 4.8rem);
+}
+
+/* --- Head --- */
+
+.sp-cats__head {
+  display: grid;
+  gap: 1.2rem;
+  margin-bottom: clamp(2.4rem, 4vw, 4.8rem);
+  max-width: 60ch;
+}
+
+.sp-cats__head--center { margin-inline: auto; justify-items: center; text-align: center; }
+
+.sp-cats__eyebrow {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sp-fg-64);
+}
+
+.sp-cats__heading {
+  margin: 0;
+  font-size: clamp(2.6rem, 3.6vw, 4.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  color: var(--sp-fg);
+  text-wrap: balance;
+}
+
+.sp-cats__text {
+  margin: 0;
+  font-size: clamp(1.4rem, 1.4vw, 1.6rem);
+  line-height: 1.6;
+  color: var(--sp-fg-64);
+}
+
+/* ============================================================
+   Bento grid
+   ============================================================
+
+   Four columns, mirrored, repeating every six panels:
+
+       wide | sq | sq
+        sq  | sq | wide
+
+   Both rows total four columns, so the block always closes cleanly and a
+   seventh panel simply starts the pattern again.
+   ============================================================ */
+
+.sp-cats__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-cats-gap, 20px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-cats__item { min-width: 0; }
+
+@media (min-width: 600px) {
+  .sp-cats__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 990px) {
+  .sp-cats__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  .sp-cats__grid > .sp-cats__item:nth-child(6n + 1),
+  .sp-cats__grid > .sp-cats__item:nth-child(6n) { grid-column: span 2; }
+
+  /*  A wide panel left alone at the end would stretch to half a row with
+      nothing to balance it, so it takes the whole width instead.        */
+  .sp-cats__grid > .sp-cats__item:nth-child(6n + 1):last-child { grid-column: span 4; }
+}
+
+/* ============================================================
+   Panel
+   ============================================================ */
+
+.sp-cats__card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1.6rem;
+  height: 100%;
+  min-height: 26rem;
+  padding: clamp(2rem, 2.4vw, 3.2rem);
+  border-radius: var(--sp-cats-radius, 18px);
+  background: var(--tint, #e9e5df);
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform var(--sp-base) var(--sp-ease),
+    box-shadow var(--sp-base) var(--sp-ease);
+}
+
+.sp-cats__card:hover,
+.sp-cats__card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+/*  Type colour is decided from the panel's brightness in Liquid. */
+.sp-cats__card--dark { color: #2f2b28; }
+.sp-cats__card--light { color: #f6f2ea; }
+
+.sp-cats__copy {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  align-content: start;
+  z-index: 2;
+}
+
+.sp-cats__label {
+  font-size: clamp(1.2rem, 1.1vw, 1.4rem);
+  letter-spacing: 0.01em;
+  opacity: 0.72;
+}
+
+.sp-cats__title {
+  font-size: clamp(2.2rem, 2.6vw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.sp-cats__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.8rem;
+  padding: 0.9rem 1.6rem;
+  border-radius: 999px;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: transform var(--sp-fast) var(--sp-ease);
+}
+
+/*  The pill inverts the panel: it is painted in the type colour and its own
+    label is knocked back out in the panel colour. Setting `color` rather
+    than fiddling with fill means the arrow, which strokes currentColor,
+    follows the label for free.                                           */
+.sp-cats__card--dark .sp-cats__btn {
+  background: #2f2b28;
+  color: var(--tint, #e9e5df);
+}
+
+/*  --light means the card uses LIGHT TYPE, which means its tint is dark, so
+    the button is light with the tint as its label. That was right all along;
+    only the fallback was wrong. --tint is always set inline from the
+    merchant's colour, and white was never a sensible stand-in for it. */
+.sp-cats__card--light .sp-cats__btn {
+  background: #f6f2ea;
+  color: var(--tint, #2f2b28);
+}
+
+.sp-cats__card:hover .sp-cats__btn { transform: translateX(3px); }
+
+/* --- Image --- */
+
+.sp-cats__media {
+  position: relative;
+  display: block;
+  align-self: end;
+  justify-self: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.sp-cats__img,
+.sp-cats__ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 22rem;
+  /*  contain: these are cut-outs, and a product cropped at the edge of its
+      own panel looks like a mistake rather than a crop.                  */
+  object-fit: contain;
+  object-position: center bottom;
+  transform: scale(1.001);
+  transition: transform var(--sp-slow) var(--sp-ease);
+}
+
+.sp-cats__ph {
+  min-height: 12rem;
+  border-radius: 1.2rem;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.sp-cats__card:hover .sp-cats__img,
+.sp-cats__card:focus-visible .sp-cats__img { transform: scale(1.05); }
+
+/* --- Wide panels put the image beside the copy --- */
+
+@media (min-width: 990px) {
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n + 1) .sp-cats__card,
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n) .sp-cats__card {
+    grid-template-rows: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: 2.4rem;
+  }
+
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n + 1) .sp-cats__copy,
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n) .sp-cats__copy {
+    align-content: center;
+  }
+
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n + 1) .sp-cats__title,
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n) .sp-cats__title {
+    font-size: clamp(2.8rem, 3.2vw, 4rem);
+  }
+
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n + 1) .sp-cats__img,
+  .sp-cats--cutout .sp-cats__grid > .sp-cats__item:nth-child(6n) .sp-cats__img {
+    max-height: 26rem;
+    object-position: center;
+  }
+}
+
+/* --- Focus --- */
+
+.sp-cats a:focus-visible {
+  outline: 2px solid var(--sp-brass);
+  outline-offset: 4px;
+}
+
+/* --- Reveal --- */
+
+[data-sp-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+[data-sp-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--sp-slow, 520ms) var(--sp-ease, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    transform var(--sp-slow, 520ms) var(--sp-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+/*  Without JS the observer never runs, so the panels would stay invisible. */
+.no-js [data-sp-reveal] { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sp-reveal] { opacity: 1; transform: none; transition: none; }
+
+  .sp-cats__card,
+  .sp-cats__img,
+  .sp-cats__btn { transition: none; }
+
+  .sp-cats__card:hover { transform: none; }
+  .sp-cats__card:hover .sp-cats__img { transform: none; }
+}
+
+/* --- Small screens --- */
+
+@media (max-width: 599px) {
+  .sp-cats__card { min-height: 22rem; padding: 1.8rem; }
+  .sp-cats__title { font-size: 2rem; }
+  .sp-cats__img { max-height: 16rem; }
+}
+
+/* ============================================================
+   Fill — the photograph is the panel
+   ============================================================
+
+   The tint stops being the surface and becomes only a fallback behind the
+   picture, so the measured type colour no longer applies here: whatever the
+   photograph is doing, the copy sits on a scrim and stays cream. Cut-out
+   mode keeps the computed tone, because there the tint IS what you read
+   against.
+   ============================================================ */
+
+.sp-cats--fill .sp-cats__card {
+  grid-template-rows: 1fr auto;
+  align-items: end;
+  min-height: 30rem;
+}
+
+.sp-cats--fill .sp-cats__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.sp-cats--fill .sp-cats__img,
+.sp-cats--fill .sp-cats__ph {
+  max-height: none;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/*  Weighted to the foot, so the label always has ground to sit on whatever
+    the photograph happens to be doing up top.                            */
+.sp-cats--fill .sp-cats__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(20, 16, 13, var(--sp-cats-scrim, 0.55)) 0%,
+    rgba(20, 16, 13, calc(var(--sp-cats-scrim, 0.55) * 0.55)) 42%,
+    rgba(20, 16, 13, 0) 78%
+  );
+  pointer-events: none;
+}
+
+.sp-cats--fill .sp-cats__copy {
+  position: relative;
+  z-index: 2;
+  grid-row: 2;
+  align-content: end;
+}
+
+/*  Legibility no longer depends on the tint, so both tone classes resolve
+    to the same pair.                                                     */
+.sp-cats--fill .sp-cats__card--dark,
+.sp-cats--fill .sp-cats__card--light { color: #f6f2ea; }
+
+.sp-cats--fill .sp-cats__card--dark .sp-cats__btn,
+.sp-cats--fill .sp-cats__card--light .sp-cats__btn {
+  background: #f6f2ea;
+  color: #2f2b28;
+}
+
+@media (min-width: 990px) {
+  .sp-cats--fill .sp-cats__card { min-height: 34rem; }
+
+  .sp-cats--fill .sp-cats__grid > .sp-cats__item:nth-child(6n + 1) .sp-cats__title,
+  .sp-cats--fill .sp-cats__grid > .sp-cats__item:nth-child(6n) .sp-cats__title {
+    font-size: clamp(2.8rem, 3.2vw, 4rem);
+  }
+}

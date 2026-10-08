@@ -1,0 +1,864 @@
+/* ============================================================
+   Sofa Parlour — Product page
+   ============================================================
+
+   Gallery left, buy box right. The buy box sticks while the gallery scrolls:
+   on a piece this expensive the shopper reads a long way down, and the price
+   and the button should not leave with the pictures.
+
+   Hedvig Letters Sans ships ONE weight and the theme sets
+   font-synthesis-weight: none, so font-weight is inert. Hierarchy comes from
+   size, colour and letter-spacing.
+   ============================================================ */
+
+/*  MATCHING THE REFERENCE
+    ----------------------
+    Sharp-ish corners, no shadows, hairline borders, and a price set almost
+    as large as the title. Two radii for the whole page rather than a mix:
+    --pd-r for surfaces, --pd-rb for controls.
+
+    One thing cannot be matched and is worth saying plainly: their headings
+    are BOLD. Hedvig Letters Sans ships a single weight and the theme sets
+    font-synthesis-weight: none, so there is no bold to reach for. The
+    emphasis here is carried by size and tight tracking instead, which is
+    why the title and price are set larger than they would otherwise need
+    to be. Loading a second weight is the only way to get literal bold.  */
+.sp-pd {
+  --pd-r: 0.4rem;
+  --pd-rb: 0.4rem;
+
+  --pd-ground: #ffffff;
+  --pd-raised: #f6f3ee;
+  --pd-mount: #f6f3ee;
+
+  --pd-ink: #1f1a16;                       /* 12.83 / 11.31 : 1 */
+  --pd-ink-2: rgba(31, 26, 22, 0.72);   /*  7.36 /  6.66 : 1 */
+  --pd-ink-3: rgba(31, 26, 22, 0.62);   /*  4.91 /  4.56 : 1 — still AA */
+
+  --pd-line: rgba(31, 26, 22, 0.12);
+  --pd-edge: rgba(31, 26, 22, 0.60);     /*  3.27 : 1 — control boundaries */
+  --pd-brass: #9a5d06;                     /*  6.40 : 1 */
+
+  --pd-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --pd-fast: 160ms;
+  --pd-base: 280ms;
+
+  --pd-gut: clamp(1.6rem, 4vw, 4.8rem);
+
+  padding: var(--sp-pd-pad-t, 48px) 0 var(--sp-pd-pad-b, 88px);
+  background-color: var(--pd-ground);
+  color: var(--pd-ink);
+}
+
+.sp-pd__inner {
+  max-width: 140rem;
+  margin: 0 auto;
+  padding: 0 var(--pd-gut);
+}
+
+.sp-pd__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.4rem, 4vw, 5.6rem);
+}
+
+@media (min-width: 990px) {
+  .sp-pd__grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  /*  The buy box is NOT sticky, and that is a decision rather than an
+      omission.
+
+      position: sticky on a box taller than the viewport pins its top and
+      then never moves again — the bottom of it becomes permanently
+      unreachable. The only way to keep it sticky is to cap its height and
+      let it scroll inside itself, which is what this used to do, and it put
+      a second scrollbar in the middle of the page for the shopper to find.
+
+      This buy box carries options, quantity, two buttons, instalment terms,
+      a lead-time note, three assurances and the accordions. It is taller
+      than a laptop viewport on most products. So it scrolls with the page
+      like everything else, every word of it is reachable, and there is one
+      scrollbar on the page instead of two. */
+}
+
+/* ------------------------------------------------------------
+   Gallery
+   ------------------------------------------------------------ */
+
+.sp-pd__media {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+/*  A cream stage. Furniture is photographed on white, so on an espresso page
+    the piece needs its own ground or it reads as a cut-out floating in the
+    dark.                                                                   */
+.sp-pd__stage {
+  position: relative;
+  aspect-ratio: var(--sp-pd-ratio, 1 / 1);
+  overflow: hidden;
+  border-radius: var(--pd-r);
+  background-color: var(--pd-mount);
+}
+
+.sp-pd__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--pd-base) var(--pd-ease), visibility var(--pd-base);
+}
+
+.sp-pd__slide.is-active { opacity: 1; visibility: visible; }
+.sp-pd__slide[hidden] { display: none; }
+
+/*  contain, not cover: a sofa cropped to fill a square loses its arms and
+    its proportions, which are the two things a shopper is judging.         */
+.sp-pd__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  object-fit: contain;
+}
+
+.sp-pd__img--ph { padding: 0; background-color: rgba(31, 26, 22, 0.05); }
+
+.sp-pd__slide model-viewer,
+.sp-pd__slide iframe,
+.sp-pd__slide video {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  object-fit: contain;
+}
+
+.sp-pd__save {
+  position: absolute;
+  z-index: 2;
+  top: 1.6rem;
+  left: 1.6rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--pd-rb);
+  background-color: var(--pd-ink);
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-pd__thumbs {
+  display: flex;
+  gap: 0.8rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  scrollbar-width: none;
+}
+
+.sp-pd__thumbs::-webkit-scrollbar { display: none; }
+
+.sp-pd__thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 8.4rem;
+  height: 8.4rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--pd-r);
+  overflow: hidden;
+  background-color: var(--pd-mount);
+  cursor: pointer;
+  transition: border-color var(--pd-fast) var(--pd-ease);
+}
+
+.sp-pd__thumb[hidden] { display: none; }
+.sp-pd__thumb.is-active { border-color: var(--pd-brass); }
+
+.sp-pd__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  object-fit: contain;
+}
+
+/*  Marks a video or a 3D model so the shopper knows the thumbnail does
+    something the others do not. */
+.sp-pd__thumb-badge {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: var(--pd-rb);
+  background-color: var(--pd-ink);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   Buy box
+   ------------------------------------------------------------ */
+
+.sp-pd__buy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 2.4vw, 2.8rem);
+  min-width: 0;
+}
+
+.sp-pd__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.sp-pd__eyebrow {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pd-ink-3);
+}
+
+.sp-pd__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(2.4rem, 3vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--pd-ink);
+}
+
+.sp-pd__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.4rem;
+  font-size: 1.25rem;
+}
+
+.sp-pd__rating { display: inline-flex; align-items: center; gap: 0.6rem; }
+.sp-pd__stars { position: relative; display: inline-block; font-size: 1.3rem; line-height: 1; letter-spacing: 0.1em; }
+.sp-pd__stars-track { color: rgba(31, 26, 22, 0.20); }
+
+.sp-pd__stars-fill {
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--pd-brass);
+}
+
+.sp-pd__muted { color: var(--pd-ink-3); }
+.sp-pd__muted[hidden] { display: none; }
+
+/*  Stated only where Shopify is genuinely tracking inventory — see the
+    section. Bronze rather than red: it is a fact about availability, not an
+    alarm, and the palette holds no red. */
+.sp-pd__stock {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pd-brass);
+}
+
+.sp-pd__stock-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background-color: currentColor;
+}
+
+.sp-pd__prices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.2rem;
+  margin: 0;
+}
+
+.sp-pd__now {
+  /*  Set close to the title. With one font weight available, size is what
+      says "this is the number that matters". */
+  font-size: clamp(2.2rem, 2.9vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-pd__was {
+  font-size: 1.5rem;
+  color: var(--pd-ink-3);
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-pd__was[hidden] { display: none; }
+
+.sp-pd__taxnote,
+.sp-pd__blurb {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: var(--pd-ink-2);
+}
+
+.sp-pd__taxnote { font-size: 1.15rem; color: var(--pd-ink-3); }
+
+/* ------------------------------------------------------------
+   Options
+   ------------------------------------------------------------ */
+
+.sp-pd__options { display: flex; flex-direction: column; gap: 1.8rem; }
+.sp-pd__option { display: flex; flex-direction: column; gap: 0.9rem; }
+
+.sp-pd__option-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 0.9rem;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.sp-pd__option-name { letter-spacing: 0.14em; text-transform: uppercase; color: var(--pd-ink-3); }
+.sp-pd__option-value { color: var(--pd-ink); }
+
+.sp-pd__values { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+
+/*  Fabric cards are wider than word pills, so this group gets a little more
+    room between rows — two lines of cards packed at pill spacing read as one
+    block rather than as separate choices. */
+.sp-pd__option--cards .sp-pd__values { gap: 1rem; }
+
+.sp-pd__value {
+  min-height: 4.4rem;
+  padding: 0 1.6rem;
+  border: 1px solid var(--pd-edge);
+  border-radius: var(--pd-rb);
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 1.3rem;
+  color: var(--pd-ink);
+  cursor: pointer;
+  transition: border-color var(--pd-fast) var(--pd-ease),
+              background-color var(--pd-fast) var(--pd-ease),
+              color var(--pd-fast) var(--pd-ease);
+}
+
+.sp-pd__value:hover { border-color: var(--pd-ink); }
+
+.sp-pd__value.is-active {
+  border-color: var(--pd-ink);
+  background-color: var(--pd-ink);
+  color: var(--pd-ground);
+}
+
+/*  A fabric card, not a word. On upholstery the name of a weave tells a
+    shopper almost nothing and the photograph tells them everything — which
+    is the whole reason this option is picked out from the others.          */
+.sp-pd__value--card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 0;
+  padding: 0.6rem 1.4rem 0.6rem 0.6rem;
+  border-radius: var(--pd-r);
+}
+
+.sp-pd__value--card.is-active {
+  background-color: transparent;
+  color: var(--pd-ink);
+  box-shadow: inset 0 0 0 1px var(--pd-ink);
+}
+
+.sp-pd__value-shot {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  overflow: hidden;
+  border-radius: var(--pd-r);
+  background-color: var(--pd-mount);
+}
+
+.sp-pd__value-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*  Fallback when no photograph resolves to this value: the swatch hex from
+    the admin, then a neutral chip. A card is never empty.                  */
+.sp-pd__value-dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--sw, rgba(31, 26, 22, 0.10));
+}
+
+.sp-pd__value-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  text-align: left;
+}
+
+.sp-pd__value-name {
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+/*  The price of the cheapest variant carrying this option. Tabular figures,
+    so a column of prices down a set of cards lines up. */
+.sp-pd__value-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  color: var(--pd-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-pd__value-price s {
+  font-size: 1.1rem;
+  color: rgba(31, 26, 22, 0.45);
+}
+
+/*  With a price under the name the card stops being a pill: two lines of
+    copy inside a 999px radius reads as a squashed lozenge. */
+.sp-pd__option--cards .sp-pd__value--card {
+  align-items: flex-start;
+  padding: 0.8rem 1.6rem 0.8rem 0.8rem;
+  border-radius: var(--pd-r);
+}
+
+/* ------------------------------------------------------------
+   Buy row
+   ------------------------------------------------------------ */
+
+.sp-pd__form { display: flex; flex-direction: column; gap: 1rem; margin: 0; }
+
+.sp-pd__buyrow { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+.sp-pd__qty {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--pd-edge);
+  border-radius: var(--pd-rb);
+  overflow: hidden;
+}
+
+.sp-pd__qty-btn {
+  width: 4.4rem;
+  height: 5.6rem;
+  border: 0;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 1.6rem;
+  color: var(--pd-ink-2);
+  cursor: pointer;
+  transition: background-color var(--pd-fast) var(--pd-ease), color var(--pd-fast) var(--pd-ease);
+}
+
+.sp-pd__qty-btn:hover { background-color: rgba(31, 26, 22, 0.05); color: var(--pd-ink); }
+
+.sp-pd__qty-input {
+  width: 4rem;
+  height: 5.6rem;
+  border: 0;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 1.4rem;
+  text-align: center;
+  color: var(--pd-ink);
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.sp-pd__qty-input::-webkit-outer-spin-button,
+.sp-pd__qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/*  Cream on espresso at 12.83:1 — the strongest pair the palette holds,
+    spent on the one control the page exists to reach. The price rides in the
+    button because on a page this long the shopper otherwise scrolls back
+    up just to check it.                                                               */
+.sp-pd__add {
+  flex: 1 1 22rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 5.6rem;
+  padding: 0 2.4rem;
+  border: 0;
+  border-radius: var(--pd-rb);
+  background-color: var(--pd-ink);
+  font-family: inherit;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color var(--pd-base) var(--pd-ease), color var(--pd-base) var(--pd-ease);
+}
+
+.sp-pd__add:hover:not(:disabled) { background-color: var(--pd-brass); }
+.sp-pd__add:disabled { background-color: rgba(31, 26, 22, 0.06); color: rgba(31, 26, 22, 0.70); cursor: not-allowed; }
+.sp-pd__add.is-busy { opacity: 0.6; pointer-events: none; }
+
+.sp-pd__add-price {
+  padding-left: 1rem;
+  border-left: 1px solid rgba(31, 26, 22, 0.35);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-pd__add-price[hidden] { display: none; }
+
+/*  Shopify paints the dynamic checkout button itself. These variables are
+    the only lever the theme has over it, so the shape matches the button
+    above rather than arriving as a differently-rounded rectangle.          */
+/*  Shopify renders this button itself, in the colours it was given by the
+    theme's global button settings. Those are not this section's palette, so
+    the classes it emits are targeted directly.
+
+    The UNBRANDED variant (Buy it now) is ours to colour, and takes the
+    outlined treatment so it sits second to Add to basket rather than
+    competing with it.
+
+    The BRANDED variants are not: a Shop Pay button is purple and a PayPal
+    button is yellow because those are the marks shoppers recognise, and
+    recolouring them both breaks the brand rules and makes the button harder
+    to trust. Only their shape is matched.                                  */
+.sp-pd__dynamic {
+  --buttons-radius: 999px;
+  --buttons-radius-outset: 999px;
+  --buttons-border-width: 0px;
+  --buttons-border-opacity: 0;
+  --buttons-shadow-opacity: 0;
+  margin-top: 0.2rem;
+}
+
+.sp-pd__dynamic .shopify-payment-button__button {
+  min-height: 5.6rem;
+  border-radius: var(--pd-rb);
+  font-family: inherit;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  transition: background-color var(--pd-base) var(--pd-ease),
+              border-color var(--pd-base) var(--pd-ease),
+              color var(--pd-base) var(--pd-ease);
+}
+
+.sp-pd__dynamic .shopify-payment-button__button--unbranded {
+  border: 1px solid var(--pd-edge);
+  background-color: transparent;
+  color: var(--pd-ink);
+  box-shadow: none;
+}
+
+.sp-pd__dynamic .shopify-payment-button__button--unbranded:hover:not([disabled]) {
+  border-color: var(--pd-ink);
+  background-color: var(--pd-ink);
+  color: var(--pd-ground);
+}
+
+/*  Shopify's "More payment options" link inherits nothing, so it is set
+    here or it renders in the browser's default blue. */
+.sp-pd__dynamic .shopify-payment-button__more-options {
+  margin-top: 0.8rem;
+  font-family: inherit;
+  font-size: 1.2rem;
+  color: var(--pd-ink-3);
+  text-underline-offset: 0.3em;
+  transition: color var(--pd-fast) var(--pd-ease);
+}
+
+.sp-pd__dynamic .shopify-payment-button__more-options:hover { color: var(--pd-ink); }
+
+/*  Brass, not red: the palette holds no red, and a rejected add is a
+    correction rather than an alarm. Brass clears AA at 6.40:1 where a muted
+    red would not. */
+.sp-pd__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--pd-brass);
+  border-radius: var(--pd-r);
+  background-color: rgba(154, 93, 6, 0.1);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--pd-ink);
+}
+
+.sp-pd__error[hidden] { display: none; }
+
+/*  Second to the add button and it looks it: outlined rather than filled,
+    so the page keeps exactly one thing that reads as the main action. */
+.sp-pd__second {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  width: 100%;
+  min-height: 5rem;
+  padding: 0 2rem;
+  border: 1px solid var(--pd-edge);
+  border-radius: var(--pd-rb);
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  color: var(--pd-ink);
+  text-decoration: none;
+  transition: border-color var(--pd-fast) var(--pd-ease),
+              background-color var(--pd-fast) var(--pd-ease);
+}
+
+.sp-pd__second:hover {
+  border-color: var(--pd-ink);
+  background-color: rgba(31, 26, 22, 0.04);
+}
+
+.sp-pd__terms { font-size: 1.2rem; color: var(--pd-ink-2); }
+.sp-pd__terms:empty { display: none; }
+
+.sp-pd__note {
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid var(--pd-line);
+  border-radius: var(--pd-r);
+  background-color: var(--pd-raised);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--pd-ink-2);
+}
+
+.sp-pd__note > * { margin: 0; }
+.sp-pd__note > * + * { margin-top: 0.6rem; }
+
+/* ------------------------------------------------------------
+   Assurances
+   ------------------------------------------------------------ */
+
+/*  One raised panel with hairlines between the rows, rather than three loose
+    lines of text. Grouping them says these are the terms of the purchase;
+    leaving them floating says they are three unrelated remarks.           */
+/*  A row above the buy row, not a stacked panel. These are the terms of the
+    purchase and they belong beside the button that commits to it — which is
+    where the reference puts them, for the same reason.
+
+    auto-fit rather than a fixed count, so two assurances fill the width and
+    four wrap instead of shrinking to nothing. */
+.sp-pd__assure {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem 1.6rem;
+  margin: 0;
+  padding: 1.4rem 0;
+  border-top: 1px solid var(--pd-line);
+  border-bottom: 1px solid var(--pd-line);
+  list-style: none;
+}
+
+.sp-pd__assure-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.sp-pd__assure-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 999px;
+  /* Brass at a tenth, so the disc reads as a tint of the accent rather than
+     as a fourth colour. */
+  background-color: rgba(154, 93, 6, 0.12);
+  color: var(--pd-brass);
+}
+
+.sp-pd__assure-copy { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.sp-pd__assure-title { font-size: 1.3rem; line-height: 1.35; color: var(--pd-ink); }
+.sp-pd__assure-text { font-size: 1.2rem; line-height: 1.5; color: var(--pd-ink-3); }
+
+/* ------------------------------------------------------------
+   Accordions
+   ------------------------------------------------------------ */
+
+.sp-pd__panels { border-top: 1px solid var(--pd-line); }
+.sp-pd__panel { border-bottom: 1px solid var(--pd-line); }
+
+.sp-pd__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.6rem 0;
+  font-size: 1.3rem;
+  color: var(--pd-ink);
+  cursor: pointer;
+  list-style: none;
+  transition: color var(--pd-fast) var(--pd-ease);
+}
+
+.sp-pd__panel-head::-webkit-details-marker { display: none; }
+.sp-pd__panel-head:hover { color: var(--pd-brass); }
+
+.sp-pd__panel-head svg {
+  flex: 0 0 auto;
+  color: var(--pd-ink-3);
+  transition: transform var(--pd-base) var(--pd-ease);
+}
+
+/*  The plus becomes a minus by rotation, so one glyph carries both states
+    and there is no second icon to keep in sync. */
+.sp-pd__panel[open] .sp-pd__panel-head svg { transform: rotate(135deg); }
+
+.sp-pd__panel-body {
+  padding: 0 0 1.8rem;
+  font-size: 1.25rem;
+  line-height: 1.7;
+  color: var(--pd-ink-2);
+}
+
+.sp-pd__panel-body > * { margin: 0; }
+.sp-pd__panel-body > * + * { margin-top: 0.9rem; }
+.sp-pd__panel-body a { color: var(--pd-ink); text-underline-offset: 0.3em; }
+
+/* ------------------------------------------------------------
+   Below the fold
+   ------------------------------------------------------------ */
+
+.sp-pd__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.8rem, 4vw, 5.6rem);
+  margin-top: clamp(4.8rem, 8vw, 9.6rem);
+  padding-top: clamp(4rem, 6vw, 6.4rem);
+  border-top: 1px solid var(--pd-line);
+}
+
+@media (min-width: 990px) {
+  .sp-pd__detail { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+}
+
+.sp-pd__story,
+.sp-pd__specs { min-width: 0; }
+
+/*  App blocks sit between the assurances and the accordions, in their own
+    region so a trust badge or a review widget is never mistaken for one of
+    the theme's own rows. */
+.sp-pd__apps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.sp-pd__app { max-width: 100%; }
+
+.sp-pd__h2 {
+  margin: 0 0 1.6rem;
+  font-family: inherit;
+  font-size: clamp(1.9rem, 2.2vw, 2.4rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--pd-ink);
+}
+
+.sp-pd__rte {
+  max-width: 62ch;
+  font-size: 1.4rem;
+  line-height: 1.75;
+  color: var(--pd-ink-2);
+}
+
+.sp-pd__rte > * { margin: 0; }
+.sp-pd__rte > * + * { margin-top: 1.2rem; }
+.sp-pd__rte a { color: var(--pd-ink); text-underline-offset: 0.3em; }
+.sp-pd__rte a:hover { color: var(--pd-brass); }
+.sp-pd__rte ul, .sp-pd__rte ol { padding-left: 1.8rem; }
+.sp-pd__rte li + li { margin-top: 0.5rem; }
+
+/*  A definition list, because that is what a specification is: a term and
+    its value. The rule runs between rows only — a border on each would
+    leave a stray line hanging under the last one.                          */
+.sp-pd__spec-list { margin: 0; padding: 0; }
+
+.sp-pd__spec {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.8fr) minmax(0, 1.4fr);
+  gap: 1.2rem;
+  padding: 1.1rem 0;
+}
+
+.sp-pd__spec + .sp-pd__spec { border-top: 1px solid var(--pd-line); }
+
+.sp-pd__spec-key {
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pd-ink-3);
+}
+
+.sp-pd__spec-val {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.5;
+  color: var(--pd-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------
+   Focus
+   ------------------------------------------------------------ */
+
+.sp-pd a:focus-visible,
+.sp-pd button:focus-visible,
+.sp-pd input:focus-visible,
+.sp-pd summary:focus-visible {
+  outline: 2px solid var(--pd-brass);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-pd__slide,
+  .sp-pd__thumb,
+  .sp-pd__value,
+  .sp-pd__add,
+  .sp-pd__qty-btn,
+  .sp-pd__panel-head,
+  .sp-pd__panel-head svg { transition: none; }
+}
+
+/* ------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------ */
+
+@media (max-width: 989px) {
+  .sp-pd__thumb { width: 6.8rem; height: 6.8rem; }
+  .sp-pd__img { padding: 1.2rem; }
+  .sp-pd__add { flex: 1 1 100%; }
+  .sp-pd__assure { grid-template-columns: minmax(0, 1fr); }
+}

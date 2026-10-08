@@ -1,0 +1,34 @@
+{
+  "name": "t:sections.footer.name",
+  "type": "footer",
+  "sections": {
+    "footer": {
+      "type": "sp-footer",
+      "blocks": {
+        "m1": {
+          "type": "menu",
+          "settings": {
+            "heading": "Shop",
+            "menu": "footer"
+          }
+        }
+      },
+      "block_order": [
+        "m1"
+      ],
+      "settings": {
+        "description": "Made-to-order sofas and armchairs, built in one workshop in Britain.",
+        "show_social": true,
+        "payment_enable": true,
+        "show_wordmark": true,
+        "enable_country_selector": false,
+        "enable_language_selector": false,
+        "padding_top": 72,
+        "padding_bottom": 32
+      }
+    }
+  },
+  "order": [
+    "footer"
+  ]
+}

@@ -1,0 +1,350 @@
+{%- comment -%}
+  ============================================================
+  Quick view — rendered into the modal
+  ============================================================
+
+  Fetched with Shopify's Section Rendering API:
+
+      /products/{handle}?section_id=sp-quickview
+
+  so prices, money format and translations come from the same Liquid the
+  product page uses rather than being reassembled in JavaScript.
+
+  EVERY IMAGE IS TAGGED WITH ITS COLOUR, resolved in priority order:
+
+    1. an explicit variant -> media link set in the admin
+    2. the image ALT text, parsed for a colour token
+    3. nothing — the image becomes SHARED and shows for every colour
+
+  Liquid has no dictionaries, so the resolution runs ONCE into a delimited
+  string and is read back by index. Doing it inline would repeat the whole
+  variant scan for the thumbnails, the slides and again for the swatches.
+  ============================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign v = product.selected_or_first_available_variant
+
+  assign on_sale = false
+  if v.compare_at_price > v.price
+    assign on_sale = true
+  endif
+
+  comment
+    Find the colour option by name, wherever it sits in the option list, so
+    Size / Colour and Colour / Size both work.
+  endcomment
+  assign colour_index = -1
+  assign colour_option = blank
+  for option in product.options_with_values
+    assign opt_name = option.name | downcase | strip
+    if opt_name contains 'color' or opt_name contains 'colour' or opt_name contains 'fabric' or opt_name contains 'finish' or opt_name contains 'shade' or opt_name contains 'material'
+      assign colour_index = forloop.index0
+      assign colour_option = option
+      break
+    endif
+  endfor
+
+  assign selected_colour = ''
+  if colour_index >= 0
+    assign selected_colour = v.options[colour_index] | downcase | strip
+  endif
+
+  assign rating = product.metafields.reviews.rating.value
+  assign rating_count = product.metafields.reviews.rating_count
+  assign rating_pct = 0
+  if rating != blank
+    assign rating_pct = rating.rating | times: 1.0 | divided_by: 5.0 | times: 100
+  endif
+
+  assign blurb = product.metafields.custom.short_description.value | default: product.metafields.custom.short_description
+  if blurb == blank
+    assign blurb = product.description | strip_html | truncate: 220
+  endif
+-%}
+
+{%- capture colour_lookup -%}
+  {%- for media in product.media -%}
+    {%- liquid
+      assign media_colour = ''
+
+      if colour_index >= 0
+        for variant in product.variants
+          if variant.featured_media != blank and variant.featured_media.id == media.id
+            assign media_colour = variant.options[colour_index] | downcase | strip
+            break
+          endif
+        endfor
+
+        if media_colour == blank and media.alt != blank
+          assign alt_token = media.alt | downcase | strip
+
+          if alt_token contains 'colour:'
+            assign alt_token = alt_token | split: 'colour:' | last
+          elsif alt_token contains 'color:'
+            assign alt_token = alt_token | split: 'color:' | last
+          endif
+
+          assign alt_token = alt_token | split: ',' | first
+          assign alt_token = alt_token | split: '|' | first
+          assign alt_token = alt_token | split: ' - ' | first
+          assign alt_token = alt_token | strip
+
+          comment
+            Exact match first, so "Blue" never claims an image labelled
+            "Navy Blue" when both values exist.
+          endcomment
+          for value in colour_option.values
+            assign cv = value | downcase | strip
+            if alt_token == cv
+              assign media_colour = cv
+              break
+            endif
+          endfor
+
+          comment
+            Then longest-first containment, so a multi-word value wins over
+            the single word inside it.
+          endcomment
+          if media_colour == blank
+            assign best_len = 0
+            for value in colour_option.values
+              assign cv = value | downcase | strip
+              assign cv_len = cv | size
+              if alt_token contains cv and cv_len > best_len
+                assign media_colour = cv
+                assign best_len = cv_len
+              endif
+            endfor
+          endif
+        endif
+      endif
+    -%}
+    {{ media_colour }}{% unless forloop.last %}~{% endunless %}
+  {%- endfor -%}
+{%- endcapture -%}
+
+{%- assign colour_map = colour_lookup | strip | split: '~' -%}
+
+<div
+  class="sp-qv"
+  data-sp-qv-content
+  data-sp-quickadd-root
+  data-colour-index="{{ colour_index }}"
+  data-selected-colour="{{ selected_colour | escape }}"
+>
+  <div class="sp-qv__media">
+    <div class="sp-qv__stage">
+      {%- if product.media.size > 0 -%}
+        {%- for media in product.media -%}
+          {%- liquid
+            assign this_colour = colour_map[forloop.index0] | strip
+            assign is_first = false
+            if forloop.first
+              assign is_first = true
+            endif
+            assign m_alt = media.alt | default: product.title
+          -%}
+          <div
+            class="sp-qv__slide{% if is_first %} is-active{% endif %}"
+            data-sp-qv-slide
+            data-media-id="{{ media.id }}"
+            data-colour="{{ this_colour | escape }}"
+            data-shared="{% if this_colour == blank %}true{% else %}false{% endif %}"
+          >
+            {{
+              media
+              | image_url: width: 1200
+              | image_tag:
+                class: 'sp-qv__img',
+                widths: '400, 700, 1000, 1200',
+                sizes: '(min-width: 900px) 42vw, 90vw',
+                loading: 'eager',
+                alt: m_alt
+            }}
+          </div>
+        {%- endfor -%}
+      {%- else -%}
+        <div class="sp-qv__slide is-active" data-sp-qv-slide data-shared="true">
+          <span class="sp-qv__ph" aria-hidden="true"></span>
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- if product.media.size > 1 -%}
+      <div class="sp-qv__thumbs" role="group" aria-label="Product images">
+        {%- for media in product.media -%}
+          {%- liquid
+            assign this_colour = colour_map[forloop.index0] | strip
+            assign t_alt = ''
+          -%}
+          <button
+            type="button"
+            class="sp-qv__thumb{% if forloop.first %} is-active{% endif %}"
+            data-sp-qv-thumb="{{ forloop.index0 }}"
+            data-colour="{{ this_colour | escape }}"
+            data-shared="{% if this_colour == blank %}true{% else %}false{% endif %}"
+            aria-label="Image {{ forloop.index }}"
+            aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+          >
+            {{ media.preview_image | image_url: width: 200 | image_tag: widths: '100, 150, 200', sizes: '72px', loading: 'lazy', alt: t_alt }}
+          </button>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="sp-qv__detail">
+    {%- if product.type != blank -%}
+      <p class="sp-qv__type">{{ product.type | escape }}</p>
+    {%- endif -%}
+
+    <h2 class="sp-qv__title">{{ product.title | escape }}</h2>
+
+    <p class="sp-qv__rating">
+      {%- if rating != blank -%}
+        <span class="sp-qv__stars" style="--pct: {{ rating_pct }}%" role="img" aria-label="Rated {{ rating.rating }} out of 5">
+          <span class="sp-qv__stars-track" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          <span class="sp-qv__stars-fill" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        </span>
+        <span>{{ rating.rating }}</span>
+        {%- if rating_count != blank -%}<span class="sp-qv__muted">({{ rating_count }})</span>{%- endif -%}
+      {%- else -%}
+        <span class="sp-qv__muted">No reviews yet</span>
+      {%- endif -%}
+    </p>
+
+    <p class="sp-qv__prices">
+      <span class="sp-qv__now" data-sp-qv-price>{{ v.price | money }}</span>
+      {%- if on_sale -%}
+        <s class="sp-qv__was" data-sp-qv-was>{{ v.compare_at_price | money }}</s>
+      {%- else -%}
+        <s class="sp-qv__was" data-sp-qv-was hidden></s>
+      {%- endif -%}
+    </p>
+
+    {%- if blurb != blank -%}
+      <p class="sp-qv__blurb">{{ blurb | escape }}</p>
+    {%- endif -%}
+
+    {%- if product.has_only_default_variant == false -%}
+      <div class="sp-qv__options">
+        {%- for option in product.options_with_values -%}
+          {%- liquid
+            assign is_colour = false
+            if forloop.index0 == colour_index
+              assign is_colour = true
+            endif
+          -%}
+          <div
+            class="sp-qv__option{% if is_colour %} sp-qv__option--colour{% endif %}"
+            data-sp-qv-option="{{ option.name | escape }}"
+            data-sp-qv-index="{{ forloop.index0 }}"
+            {% if is_colour %}data-sp-qv-colour-group{% endif %}
+          >
+            <p class="sp-qv__option-head">
+              <span class="sp-qv__option-name">{{ option.name | escape }}</span>
+              <span class="sp-qv__option-value" data-sp-qv-option-value>{{ option.selected_value | escape }}</span>
+            </p>
+
+            <div class="sp-qv__values">
+              {%- for value in option.values -%}
+                {%- liquid
+                  assign selected = false
+                  if option.selected_value == value
+                    assign selected = true
+                  endif
+
+                  comment
+                    For the colour option the swatch IS the product in that
+                    colour: find the first image resolved to this value and
+                    use it. Falling back to the swatch colour, then to the
+                    value name, means a swatch is never empty.
+                  endcomment
+                  assign sw_media = blank
+                  if is_colour
+                    assign want = value | downcase | strip
+                    for media in product.media
+                      assign mc = colour_map[forloop.index0] | strip
+                      if mc == want
+                        assign sw_media = media
+                        break
+                      endif
+                    endfor
+                  endif
+                  assign sw = value.swatch.color
+                -%}
+                <button
+                  type="button"
+                  class="sp-qv__value{% if selected %} is-active{% endif %}{% if is_colour %} sp-qv__value--img{% endif %}"
+                  data-value="{{ value | escape }}"
+                  aria-pressed="{% if selected %}true{% else %}false{% endif %}"
+                  {% if sw != blank %}style="--sw: {{ sw }};"{% endif %}
+                >
+                  {%- if is_colour and sw_media != blank -%}
+                    {%- assign sw_alt = '' -%}
+                    {{ sw_media.preview_image | image_url: width: 160 | image_tag: widths: '80, 120, 160', sizes: '48px', loading: 'lazy', alt: sw_alt }}
+                    <span class="visually-hidden">{{ value | escape }}</span>
+                  {%- elsif is_colour -%}
+                    <span class="sp-qv__value-dot" aria-hidden="true"></span>
+                    <span class="visually-hidden">{{ value | escape }}</span>
+                  {%- else -%}
+                    {{ value | escape }}
+                  {%- endif -%}
+                </button>
+              {%- endfor -%}
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    {%- form 'product', product, class: 'sp-qv__form', novalidate: 'novalidate' -%}
+      <input type="hidden" name="id" value="{{ v.id }}" data-sp-qv-id>
+
+      <div class="sp-qv__buy">
+        <div class="sp-qv__qty">
+          <button type="button" class="sp-qv__qty-btn" data-sp-qv-qty="-1" aria-label="Decrease quantity">&minus;</button>
+          <input class="sp-qv__qty-input" type="number" name="quantity" value="1" min="1" inputmode="numeric" aria-label="Quantity">
+          <button type="button" class="sp-qv__qty-btn" data-sp-qv-qty="1" aria-label="Increase quantity">+</button>
+        </div>
+
+        <button type="submit" class="sp-qv__add" data-sp-quickadd data-sp-qv-add {% unless v.available %}disabled{% endunless %}>
+          <span data-sp-qv-add-label>
+            {%- if v.available -%}Add to cart{%- else -%}{{ 'products.product.sold_out' | t }}{%- endif -%}
+          </span>
+        </button>
+      </div>
+    {%- endform -%}
+
+    <a class="sp-qv__full" href="{{ product.url }}">
+      View full details
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+
+  <script type="application/json" data-sp-qv-variants>
+    [
+      {%- for variant in product.variants -%}
+        {
+          "id": {{ variant.id }},
+          "options": {{ variant.options | json }},
+          "available": {{ variant.available }},
+          "price": {{ variant.price | money | json }},
+          "compare_at": {{ variant.compare_at_price | money | json }},
+          "on_sale": {% if variant.compare_at_price > variant.price %}true{% else %}false{% endif %},
+          "media_id": {% if variant.featured_media %}{{ variant.featured_media.id }}{% else %}null{% endif %}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ]
+  </script>
+</div>
+
+{% schema %}
+{
+  "name": "Quick view",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,70 @@
+{
+  "name": "t:sections.header.name",
+  "type": "header",
+  "sections": {
+    "sp-announcement": {
+      "type": "sp-announcement",
+      "blocks": {
+        "m1": {
+          "type": "announcement",
+          "settings": {
+            "text": "Complimentary swatches with every order",
+            "cta": "Request yours",
+            "link": ""
+          }
+        },
+        "m2": {
+          "type": "announcement",
+          "settings": {
+            "text": "Made to order in Britain — 6 to 8 weeks",
+            "cta": "",
+            "link": ""
+          }
+        },
+        "m3": {
+          "type": "announcement",
+          "settings": {
+            "text": "Book a showroom visit",
+            "cta": "Find a time",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "settings": {
+        "aside": "Free UK delivery",
+        "height": 40,
+        "interval": 5,
+        "show_localization": false
+      }
+    },
+    "sp-header": {
+      "type": "sp-header",
+      "settings": {
+        "logo_alt": "",
+        "height": 76,
+        "search_placeholder": "Search products...",
+        "menu": "main-menu",
+        "menu_label": "Main menu",
+        "menu_secondary": "",
+        "menu_secondary_label": "Support",
+        "support_label": "Help & Support",
+        "support_link": "",
+        "wishlist_label": "Loved",
+        "wishlist_link": "",
+        "account_label": "Login/Signup",
+        "show_localization": false,
+        "sticky": true,
+        "show_wishlist": true
+      }
+    }
+  },
+  "order": [
+    "sp-announcement",
+    "sp-header"
+  ]
+}

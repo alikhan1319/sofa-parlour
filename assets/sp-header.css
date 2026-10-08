@@ -1,0 +1,1019 @@
+/* ============================================================
+   Header — two rows
+   ============================================================
+
+   Row 1 is a three-column grid: lead | wordmark | utilities. The outer
+   columns are 1fr so the wordmark is centred against the VIEWPORT rather
+   than against whatever the two sides happen to measure — otherwise a long
+   search field on one side pushes the mark off-centre.
+
+   Hedvig Letters Sans has one weight and font-synthesis-weight is off
+   store-wide, so nothing here uses font-weight for hierarchy:
+
+     wordmark   2.6rem   +0.02em   black
+     nav        1.35rem   0        ink-70 -> black
+     utilities  1.15rem  +0.06em   ink-64
+     meta       1.2rem    0        ink-55
+   ============================================================ */
+
+/*  The token set is shared by the header AND the drawer.
+
+    The drawer is rendered as a SIBLING of </header>, not a child — it has to
+    be, or the sticky header's transform would become its containing block
+    and a fixed panel would slide away with the header instead of staying put.
+
+    The cost of that is scope: custom properties inherit down the tree, so a
+    block declared only on .sp-hd never reaches the drawer, and every var()
+    in it resolves to nothing. An undefined custom property does not fall
+    back to the previous cascade winner — the declaration is invalid at
+    computed-value time and the property takes its initial value, which for
+    background-color is `transparent`. That is exactly how the panel ended up
+    see-through, with no border, no rail and no transitions either.
+
+    Declared on both, so moving the drawer again cannot break it silently. */
+.sp-hd,
+.sp-hd__drawer {
+  --sp-fg: #1f1a16;
+  --sp-bg: #ffffff;
+  --sp-surface: #f6f3ee;
+  /*  On this ground brass carries type as well as decoration: 6.40:1 on the
+      page and 5.64:1 on a card, so it is safe for links and labels alike.  */
+  --sp-brass: #9a5d06;
+
+  --sp-fg-70: rgba(31, 26, 22, 0.72);
+  --sp-fg-64: rgba(31, 26, 22, 0.72);
+  --sp-fg-40: rgba(31, 26, 22, 0.62);
+  --sp-line: rgba(31, 26, 22, 0.12);
+  --sp-line-soft: rgba(31, 26, 22, 0.12);
+
+  --sp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --sp-tint: 120ms;
+  --sp-fast: 180ms;
+  --sp-base: 260ms;
+
+  position: relative;
+  z-index: 100;
+  background: var(--sp-bg);
+  color: var(--sp-fg);
+}
+
+.shopify-section-group-header-group:has(.sp-hd) {
+  position: relative;
+  z-index: 200;
+}
+
+.sp-hd__wrap {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-inline: clamp(1.6rem, 3vw, 3.2rem);
+}
+
+/* ============================================================
+   Row 1
+   ============================================================ */
+
+.sp-hd__main-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.6rem;
+  min-height: var(--sp-hd-h, 76px);
+  transition: min-height var(--sp-base) var(--sp-ease);
+}
+
+.sp-hd__lead {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+/* --- Locale pill --- */
+
+.sp-hd__loc { flex: 0 0 auto; }
+
+.sp-hd__loc-form {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+}
+
+.sp-hd__loc .localization-form__select,
+.sp-hd__loc button {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-fg-64);
+  cursor: pointer;
+}
+
+/* --- Search --- */
+
+.sp-hd__search {
+  position: relative;
+  flex: 1 1 34rem;
+  min-width: 0;
+  max-width: 38rem;
+}
+
+.sp-hd__search-form { display: block; }
+
+.sp-hd__search-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 4.4rem;
+  padding: 0 1.8rem;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  background: var(--sp-surface);
+  transition: border-color var(--sp-tint) var(--sp-ease);
+}
+
+.sp-hd__search-row:focus-within { border-color: var(--sp-brass); }
+.sp-hd__search-icon { flex: 0 0 auto; color: var(--sp-fg-40); }
+
+.sp-hd__search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.35rem;
+  color: var(--sp-fg);
+}
+
+.sp-hd__search-input::placeholder { color: var(--sp-fg-40); }
+.sp-hd__search-input:focus { outline: none; }
+.sp-hd__search-input::-webkit-search-cancel-button { display: none; }
+
+/*  Predictive results hang below the field as a panel of their own. */
+.sp-hd__search .predictive-search {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid var(--sp-line);
+  border-radius: 1.6rem;
+  background: var(--sp-surface);
+  box-shadow: 0 1.6rem 4rem rgba(31, 26, 22, 0.14);
+}
+
+/* --- Wordmark --- */
+
+.sp-hd__mark {
+  grid-column: 2;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sp-hd__mark-img {
+  display: block;
+  width: auto;
+  max-width: 20rem;
+  height: auto;
+  max-height: calc(var(--sp-hd-h, 76px) - 2.4rem);
+  object-fit: contain;
+}
+
+.sp-hd__mark-text {
+  font-size: clamp(2rem, 2.4vw, 2.6rem);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* --- Utilities --- */
+
+.sp-hd__utils {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.sp-hd__util {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-fg-64);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--sp-tint) var(--sp-ease);
+}
+
+.sp-hd__util:hover { color: var(--sp-fg); }
+.sp-hd__util svg { display: block; flex: 0 0 auto; }
+
+/*  Dawn's cart svg arrives through the drawer's innerHTML swap, so size it
+    by its own class rather than a selector only our markup satisfies.     */
+.sp-hd__util .icon-cart,
+.sp-hd__util .icon-cart-empty { width: 1.9rem; height: 1.9rem; }
+
+.sp-hd__util-label { display: none; }
+
+@media (min-width: 1100px) {
+  .sp-hd__util-label { display: inline; }
+}
+
+/*  Dawn re-renders this bubble on every cart change; styling ITS class is
+    what keeps the count right after the first add to cart.                */
+.sp-hd__util--cart { overflow: visible; }
+
+.sp-hd__util--cart .cart-count-bubble {
+  position: absolute;
+  top: 0.2rem;
+  left: 2.2rem;
+  display: grid;
+  place-items: center;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--sp-brass);
+  /* espresso on brass is 6.39:1; #fff on brass is 2.0:1 and off-palette */
+  color: var(--sp-bg);
+  font-size: 1rem;
+  letter-spacing: 0;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-hd__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  height: 4.2rem;
+  padding: 0 1.8rem;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  font-size: 1.2rem;
+  color: var(--sp-fg);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color var(--sp-tint) var(--sp-ease),
+    background var(--sp-tint) var(--sp-ease);
+}
+
+.sp-hd__account:hover {
+  border-color: var(--sp-brass);
+  background: rgba(154, 93, 6, 0.08);
+}
+
+.sp-hd__account svg { flex: 0 0 auto; }
+
+/* --- Burger --- */
+
+.sp-hd__burger {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 4.2rem;
+  height: 4.2rem;
+  padding: 0;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  background: none;
+  color: var(--sp-fg);
+  cursor: pointer;
+}
+
+.sp-hd__burger-bars { display: grid; gap: 0.4rem; width: 1.7rem; }
+.sp-hd__burger-bars i { display: block; height: 1px; background: currentColor; }
+.sp-hd__burger-bars i:nth-child(2) { width: 70%; }
+
+@media (min-width: 990px) {
+  .sp-hd__burger { display: none; }
+}
+
+/* ============================================================
+   Row 2
+   ============================================================ */
+
+.sp-hd__sub {
+  border-top: 1px solid var(--sp-line-soft);
+  border-bottom: 1px solid var(--sp-line-soft);
+}
+
+.sp-hd__sub-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.4rem;
+  min-height: 4.8rem;
+}
+
+.sp-hd__nav { display: none; min-width: 0; }
+
+@media (min-width: 990px) {
+  .sp-hd__nav { display: block; }
+}
+
+.sp-hd__list,
+.sp-hd__meta-list {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.2rem, 2vw, 2.8rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex-wrap: wrap;
+}
+
+/*  relative, not static: the panel is now attached under its own item
+    rather than spanning the row, so the item is what it is positioned
+    against. */
+.sp-hd__item { position: relative; }
+
+/*  The rule is inset from the label rather than running its full width, and
+    it grows from the centre. A full-width underline on a nav item reads as a
+    text-decoration; a short centred one reads as a marker, which is what it
+    is — and it means hovering a long word and a short one produce marks of
+    proportionate weight rather than one four times the other.              */
+.sp-hd__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.4rem 0.2rem;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: var(--sp-fg-70);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--sp-tint) var(--sp-ease);
+}
+
+.sp-hd__link::after {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  right: 0.2rem;
+  bottom: 0.9rem;
+  height: 1px;
+  background: var(--sp-brass);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--sp-base) var(--sp-ease);
+}
+
+.sp-hd__link:hover,
+.sp-hd__link:focus-visible,
+.sp-hd__link.is-on { color: var(--sp-fg); }
+
+.sp-hd__link:hover::after,
+.sp-hd__link.is-on::after,
+.sp-hd__link[aria-expanded='true']::after { transform: scaleX(1); }
+
+/*  The open item keeps its mark at full strength while the panel is down, so
+    the row still says which column you are looking at.                     */
+.sp-hd__link[aria-expanded='true'] { color: var(--sp-fg); }
+
+.sp-hd__caret { color: var(--sp-fg-40); transition: transform var(--sp-fast) var(--sp-ease); }
+.sp-hd__link[aria-expanded='true'] .sp-hd__caret { transform: rotate(180deg); }
+
+/* --- Secondary links --- */
+
+.sp-hd__meta { display: none; }
+
+@media (min-width: 750px) {
+  .sp-hd__meta { display: block; }
+}
+
+.sp-hd__meta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.2rem;
+  color: var(--sp-fg-64);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--sp-tint) var(--sp-ease);
+}
+
+.sp-hd__meta-link:hover { color: var(--sp-fg); }
+.sp-hd__meta-link--support svg { color: var(--sp-brass); }
+
+/* --- Dropdown panel --- */
+
+/* ------------------------------------------------------------
+   Dropdown
+   ------------------------------------------------------------
+   A card attached under its own menu item, not a band across the row. At
+   this width the list reads as a column of things you can pick, which is
+   what a shop menu is — a full-bleed panel turns the same links into a
+   site map.
+
+   The shadow is deep espresso rather than black: a black shadow over a dark
+   ground goes muddy grey instead of reading as depth.
+   ------------------------------------------------------------ */
+
+/*  The panel is a transparent frame; the CARD is .sp-hd__panel-inner.
+
+    That split is what buys the gap under the link. A margin would open a
+    dead strip between the label and the card, the pointer would cross it,
+    mouseleave would fire and the menu would shut on the way to itself. The
+    gap here is padding INSIDE the hover area, so the bridge is unbroken and
+    the card still appears to float clear of the row.
+
+    left is set to 0 and then corrected in JS by however much the card
+    actually overhangs the viewport — see place() in sp-header.js.         */
+.sp-hd__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  width: 34rem;
+  max-width: calc(100vw - 3.2rem);
+  padding-top: 1rem;
+}
+
+.sp-hd__panel[hidden] { display: none; }
+
+/*  A menu longer than the viewport scrolls inside the card rather than
+    running off the bottom of the screen. overscroll-behavior stops the page
+    behind from taking over once the list hits its end.                     */
+.sp-hd__panel-inner {
+  max-height: min(62rem, calc(100vh - var(--sp-hd-h, 76px) - 10rem));
+  padding: 0.8rem;
+  border: 1px solid var(--sp-line);
+  border-radius: 1.6rem;
+  background: var(--sp-surface);
+  box-shadow: 0 2.4rem 5.6rem rgba(31, 26, 22, 0.14);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 26, 22, 0.20) transparent;
+}
+
+.sp-hd__panel-inner::-webkit-scrollbar { width: 4px; }
+.sp-hd__panel-inner::-webkit-scrollbar-track { background: transparent; }
+.sp-hd__panel-inner::-webkit-scrollbar-thumb {
+  background-color: rgba(31, 26, 22, 0.20);
+  border-radius: 999px;
+}
+
+.sp-hd__panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --- Row --- */
+
+.sp-hd__row-link {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.8rem;
+  border-radius: 1.2rem;
+  text-decoration: none;
+  transition: background-color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-hd__row-link:hover,
+.sp-hd__row-link.is-on {
+  background-color: rgba(31, 26, 22, 0.05);
+}
+
+/*  The tile is a lit ground for the photograph, one step up from the card
+    behind it. `contain` rather than `cover`: a sofa cropped to a 56px square
+    becomes an unreadable patch of fabric, and the point of the thumbnail is
+    to be recognised.                                                       */
+.sp-hd__row-tile {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 5.6rem;
+  height: 5.6rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: rgba(31, 26, 22, 0.05);
+}
+
+/*  A link with nothing behind it — a page, an external URL — keeps the tile
+    as a plain square so every row still starts on the same vertical line. */
+.sp-hd__row-tile.is-empty {
+  background: rgba(31, 26, 22, 0.035);
+}
+
+.sp-hd__row-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0.4rem;
+  object-fit: contain;
+}
+
+.sp-hd__row-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.sp-hd__row-eyebrow {
+  font-size: 1.05rem;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sp-fg-64);
+}
+
+.sp-hd__row-title {
+  font-size: 1.4rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--sp-fg);
+  overflow-wrap: anywhere;
+}
+
+/*  Brass on espresso at 6.40:1, so the badge carries its own text rather
+    than relying on a fill. It only ever appears when compare-at is genuinely
+    higher than price — the theme computes it, it is never typed in.        */
+.sp-hd__row-badge {
+  align-self: flex-start;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(154, 93, 6, 0.10);
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-brass);
+}
+
+/*  Grandchildren, kept because the merchant configured them. Indented to the
+    text column so they read as belonging to the row above rather than as
+    rows of their own.                                                      */
+.sp-hd__row-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0 0 0.6rem;
+  padding: 0 0.8rem 0 7.6rem;
+  list-style: none;
+}
+
+.sp-hd__panel-sublink {
+  font-size: 1.2rem;
+  line-height: 1.4;
+  color: var(--sp-fg-64);
+  text-decoration: none;
+  transition: color var(--sp-tint) var(--sp-ease);
+}
+
+.sp-hd__panel-sublink:hover { color: var(--sp-fg); }
+
+/* --- Promo tile --- */
+
+.sp-hd__promo-item {
+  margin-top: 0.6rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--sp-line-soft);
+}
+
+.sp-hd__promo {
+  display: block;
+  padding: 0.4rem;
+  border-radius: 1.2rem;
+  text-decoration: none;
+  transition: background-color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-hd__promo:hover { background-color: rgba(31, 26, 22, 0.05); }
+
+/*  Cream mount: collection photography is shot on white, so on a dark card
+    it needs its own ground or it reads as a cut-out floating in the dark. */
+.sp-hd__promo-shot {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  background: var(--sp-fg);
+}
+
+.sp-hd__promo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.01);
+  transition: transform 620ms var(--sp-ease);
+}
+
+.sp-hd__promo:hover .sp-hd__promo-img { transform: scale(1.05); }
+
+.sp-hd__promo-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 0.9rem 0.6rem 0.4rem;
+}
+
+.sp-hd__promo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.sp-hd__promo-head {
+  font-size: 1.35rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--sp-fg);
+}
+
+.sp-hd__promo-sub {
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--sp-fg-64);
+}
+
+.sp-hd__promo-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-brass);
+}
+
+.sp-hd__promo-cta svg {
+  flex: 0 0 auto;
+  transition: transform var(--sp-base) var(--sp-ease);
+}
+
+.sp-hd__promo:hover .sp-hd__promo-cta svg { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-hd__row-link,
+  .sp-hd__promo,
+  .sp-hd__promo-img,
+  .sp-hd__promo-cta svg { transition: none; }
+  .sp-hd__promo:hover .sp-hd__promo-img { transform: scale(1.01); }
+  .sp-hd__promo:hover .sp-hd__promo-cta svg { transform: none; }
+}
+
+/* ============================================================
+   Drawer
+   ============================================================ */
+
+.sp-hd__drawer { position: fixed; inset: 0; z-index: 300; }
+.sp-hd__drawer[hidden] { display: none; }
+
+/*  The page behind is already espresso, so a scrim tinted espresso would
+    darken nothing at all. This is the same hue pressed to its darkest value,
+    which reads as the room's shadow rather than as a grey wash — and it
+    matches the cart and saved-items drawers exactly.                       */
+.sp-hd__drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 26, 22, 0.55);
+  backdrop-filter: blur(6px) saturate(0.9);
+  -webkit-backdrop-filter: blur(6px) saturate(0.9);
+  opacity: 0;
+  transition: opacity var(--sp-base) var(--sp-ease);
+}
+
+.sp-hd__drawer.is-open .sp-hd__drawer-scrim { opacity: 1; }
+
+.sp-hd__drawer-panel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  width: min(40rem, 92vw);
+  /* dvh so the account button at the foot is not left under the iOS toolbar */
+  max-height: 100dvh;
+  /* Literal fallbacks: if this panel ever loses its tokens again it must
+     fail visible, not invisible. */
+  background: var(--sp-bg, #ffffff);
+  border-right: 1px solid var(--sp-line, rgba(31, 26, 22, 0.14));
+  box-shadow: 2.4rem 0 6rem rgba(31, 26, 22, 0.14);
+  transform: translateX(-100%);
+  transition: transform 340ms var(--sp-ease);
+}
+
+.sp-hd__drawer.is-open .sp-hd__drawer-panel { transform: none; }
+
+.sp-hd__drawer-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+  padding: 2.2rem 2.4rem 1.8rem;
+  border-bottom: 1px solid var(--sp-line-soft);
+}
+
+.sp-hd__drawer-title {
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sp-fg-64);
+}
+
+.sp-hd__drawer-close {
+  display: inline-grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border: 1px solid rgba(31, 26, 22, 0.60);
+  border-radius: 999px;
+  background: none;
+  color: var(--sp-fg-70);
+  cursor: pointer;
+  transition: color var(--sp-fast) var(--sp-ease),
+              border-color var(--sp-fast) var(--sp-ease),
+              background-color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-hd__drawer-close:hover {
+  border-color: var(--sp-brass);
+  background-color: rgba(154, 93, 6, 0.1);
+  color: var(--sp-fg);
+}
+
+.sp-hd__drawer-nav { flex: 1 1 auto; overflow-y: auto; padding: 1.6rem 0; }
+
+.sp-hd__drawer-list,
+.sp-hd__drawer-meta,
+.sp-hd__drawer-sub ul { margin: 0; padding: 0; list-style: none; }
+
+/*  A hairline between items, not around them. Rows in a drawer are read as
+    a column, and a rule that only ever separates is enough — boxing each one
+    would turn a menu into a list of cards.                                 */
+.sp-hd__drawer-item + .sp-hd__drawer-item {
+  border-top: 1px solid var(--sp-line-soft);
+}
+
+.sp-hd__drawer-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  width: 100%;
+  min-height: 5.6rem;
+  padding: 1.4rem 2.4rem;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  text-align: left;
+  color: var(--sp-fg);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-hd__drawer-link:hover {
+  background-color: rgba(31, 26, 22, 0.035);
+}
+
+/*  The current page and the open accordion both take a brass rail on the
+    leading edge — drawn as a pseudo-element rather than an inset shadow so
+    it can be inset from the top and bottom of the row and read as a mark
+    rather than as a border that happens to be gold.                        */
+.sp-hd__drawer-link.is-on::before,
+.sp-hd__drawer-item.is-open > .sp-hd__drawer-link::before {
+  content: '';
+  position: absolute;
+  top: 1.2rem;
+  bottom: 1.2rem;
+  left: 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--sp-brass);
+}
+
+.sp-hd__drawer-link .sp-hd__caret {
+  flex: 0 0 auto;
+  color: var(--sp-fg-40);
+}
+
+.sp-hd__drawer-sub {
+  display: grid;
+  grid-template-rows: 0fr;
+  background: var(--sp-surface, #f6f3ee);
+  transition: grid-template-rows var(--sp-base) var(--sp-ease);
+}
+
+.sp-hd__drawer-sub > ul { overflow: hidden; }
+.sp-hd__drawer-item.is-open .sp-hd__drawer-sub { grid-template-rows: 1fr; }
+.sp-hd__drawer-item.is-open .sp-hd__caret { transform: rotate(180deg); }
+
+/*  The children sit in a recess against a rail, so an open group reads as
+    contained rather than as more top-level rows that happen to be indented. */
+.sp-hd__drawer-sub > ul {
+  padding: 0.6rem 0;
+}
+
+.sp-hd__drawer-sublink {
+  position: relative;
+  display: block;
+  padding: 1.1rem 2.4rem 1.1rem 4.2rem;
+  font-size: 1.4rem;
+  color: var(--sp-fg-64);
+  text-decoration: none;
+  transition: color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-hd__drawer-sublink::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 2.8rem;
+  width: 0.5rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.sp-hd__drawer-sublink:hover { color: var(--sp-fg); }
+
+.sp-hd__drawer-meta {
+  margin-top: 1.6rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--sp-line-soft);
+}
+
+.sp-hd__drawer-metalink {
+  display: block;
+  padding: 1rem 2.4rem;
+  font-size: 1.25rem;
+  letter-spacing: 0.06em;
+  color: var(--sp-fg-64);
+  text-decoration: none;
+  transition: color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-hd__drawer-metalink:hover { color: var(--sp-fg); }
+
+/* ------------------------------------------------------------
+   Drawer entrance
+   ------------------------------------------------------------
+   The rows arrive just after the panel does, a beat apart, so the menu
+   assembles instead of appearing whole. Delays are per-position via
+   nth-child because the markup carries no index — eight is enough to cover
+   a real menu, and anything beyond simply lands on the last beat.
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+  .sp-hd__drawer-item,
+  .sp-hd__drawer-meta {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 320ms var(--sp-ease), transform 320ms var(--sp-ease);
+  }
+
+  .sp-hd__drawer.is-open .sp-hd__drawer-item,
+  .sp-hd__drawer.is-open .sp-hd__drawer-meta {
+    opacity: 1;
+    transform: none;
+  }
+
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(1) { transition-delay: 90ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(2) { transition-delay: 130ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(3) { transition-delay: 170ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(4) { transition-delay: 210ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(5) { transition-delay: 250ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(6) { transition-delay: 290ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(7) { transition-delay: 330ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-item:nth-child(n + 8) { transition-delay: 370ms; }
+  .sp-hd__drawer.is-open .sp-hd__drawer-meta { transition-delay: 410ms; }
+}
+
+/* ------------------------------------------------------------
+   Drawer focus
+   ------------------------------------------------------------ */
+
+.sp-hd__drawer a:focus-visible,
+.sp-hd__drawer button:focus-visible {
+  outline: 2px solid var(--sp-brass);
+  outline-offset: -3px;
+}
+
+.sp-hd__drawer-foot { padding: 2.4rem; border-top: 1px solid var(--sp-line-soft); }
+
+.sp-hd__drawer-account {
+  display: inline-flex;
+  align-items: center;
+  height: 4.4rem;
+  padding: 0 2.4rem;
+  border: 1px solid var(--sp-brass);
+  border-radius: 999px;
+  font-size: 1.2rem;
+  color: var(--sp-fg);
+  text-decoration: none;
+}
+
+/* ============================================================
+   Small screens
+   ============================================================ */
+
+@media (max-width: 989px) {
+  /*  The wordmark leads on mobile and the search drops to its own line,
+      so the field keeps a usable width instead of being squeezed into a
+      third of the bar.                                                  */
+  .sp-hd__main-inner {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'burger mark utils'
+      'search search search';
+    row-gap: 1.2rem;
+    padding-block: 1.2rem;
+  }
+
+  .sp-hd__lead { display: contents; }
+  .sp-hd__burger { grid-area: burger; }
+  .sp-hd__loc { display: none; }
+  .sp-hd__search { grid-area: search; max-width: none; flex: none; }
+  .sp-hd__mark { grid-area: mark; grid-column: auto; }
+  .sp-hd__utils { grid-area: utils; }
+  .sp-hd__account { height: 3.8rem; padding: 0 1.4rem; }
+  .sp-hd__account span { display: none; }
+}
+
+/* ============================================================
+   Sticky
+   ============================================================ */
+
+.sp-hd--sticky {
+  position: sticky;
+  top: 0;
+  transition: transform var(--sp-base) var(--sp-ease),
+    box-shadow var(--sp-base) var(--sp-ease);
+  will-change: transform;
+}
+
+.sp-hd.is-condensed .sp-hd__main-inner { min-height: calc(var(--sp-hd-h, 76px) - 1.2rem); }
+.sp-hd.is-condensed {
+  /* The only thing separating a sticky header from the page scrolling
+     underneath it. At 0.07 black on an espresso ground it separated
+     nothing. */
+  box-shadow: 0 0.8rem 2.4rem rgba(31, 26, 22, 0.12);
+}
+.sp-hd--sticky.is-hidden { transform: translateY(-100%); }
+
+/* ============================================================
+   Focus and reduced motion
+   ============================================================ */
+
+.sp-hd a:focus-visible,
+.sp-hd button:focus-visible,
+.sp-hd input:focus-visible,
+.sp-hd__drawer a:focus-visible,
+.sp-hd__drawer button:focus-visible {
+  outline: 2px solid var(--sp-brass);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-hd,
+  .sp-hd *,
+  .sp-hd *::after,
+  .sp-hd__drawer,
+  .sp-hd__drawer * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .sp-hd--sticky.is-hidden { transform: none; }
+}

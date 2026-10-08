@@ -1,0 +1,293 @@
+{%- liquid
+  assign speed = section.settings.speed | default: 45
+  assign pause_on_hover = section.settings.pause_on_hover
+  assign separator = section.settings.separator | default: '•'
+-%}
+
+<div
+  class="sp-announce announcement-bar"
+  id="sp-announce-{{ section.id }}"
+  role="region"
+  aria-label="Announcements"
+  data-speed="{{ speed }}"
+  data-pause-hover="{% if pause_on_hover %}true{% else %}false{% endif %}"
+>
+  <div class="sp-announce__viewport">
+    <div class="sp-announce__track">
+      <div class="sp-announce__sequence">
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'announcement' and block.settings.text != blank -%}
+            <div class="sp-announce__item" {{ block.shopify_attributes }}>
+              {%- if block.settings.link != blank -%}
+                <a href="{{ block.settings.link }}" class="sp-announce__link">{{ block.settings.text | escape }}</a>
+              {%- else -%}
+                <span class="sp-announce__text">{{ block.settings.text | escape }}</span>
+              {%- endif -%}
+              <span class="sp-announce__sep" aria-hidden="true">{{ separator }}</span>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #sp-announce-{{ section.id }} {
+    --sp-announce-bg: #f7f4ef;
+    --sp-announce-text: #16312c;
+    --sp-announce-sep: rgba(22, 49, 44, 0.35);
+    background: var(--sp-announce-bg) !important;
+    color: var(--sp-announce-text) !important;
+    overflow: hidden;
+    width: 100%;
+    border: 0;
+    margin: 0;
+    position: relative;
+    z-index: 120;
+    box-shadow: 0 1px 0 rgba(22, 49, 44, 0.06);
+  }
+
+  .shopify-section:has(#sp-announce-{{ section.id }}),
+  .announcement-bar-section {
+    position: relative;
+    z-index: 120 !important;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__viewport {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__track {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__sequence {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.75rem;
+    white-space: nowrap;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__text,
+  #sp-announce-{{ section.id }} .sp-announce__link {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+    color: var(--sp-announce-text) !important;
+    text-decoration: none;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  #sp-announce-{{ section.id }} .sp-announce__sep {
+    color: var(--sp-announce-sep) !important;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  @media screen and (max-width: 749px) {
+    #sp-announce-{{ section.id }} .sp-announce__item {
+      padding: 0.9rem 1.25rem;
+      gap: 1.15rem;
+    }
+
+    #sp-announce-{{ section.id }} .sp-announce__text,
+    #sp-announce-{{ section.id }} .sp-announce__link {
+      font-size: 1.4rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #sp-announce-{{ section.id }} .sp-announce__track {
+      transform: none !important;
+      justify-content: center;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    #sp-announce-{{ section.id }} .sp-announce__sequence:not(:first-child) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('sp-announce-{{ section.id }}');
+    if (!root || root.dataset.marqueeInit === 'true') return;
+    root.dataset.marqueeInit = 'true';
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var track = root.querySelector('.sp-announce__track');
+    var sequence = root.querySelector('.sp-announce__sequence');
+    if (!track || !sequence || !sequence.children.length) return;
+
+    var pixelsPerSecond = parseFloat(root.dataset.speed) || 45;
+    var pauseHover = root.dataset.pauseHover === 'true';
+    var offset = 0;
+    var seqWidth = 0;
+    var rafId = 0;
+    var lastTs = 0;
+    var paused = false;
+
+    function fillTrack() {
+      track.querySelectorAll('.sp-announce__sequence:not(:first-child)').forEach(function (node) {
+        node.remove();
+      });
+
+      seqWidth = sequence.scrollWidth;
+      if (seqWidth <= 0) return;
+
+      var viewport = root.clientWidth || window.innerWidth;
+      var needed = Math.ceil((viewport * 2) / seqWidth) + 1;
+
+      for (var i = 0; i < needed; i++) {
+        var clone = sequence.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        track.appendChild(clone);
+      }
+
+      seqWidth = sequence.scrollWidth;
+      offset = offset % seqWidth;
+    }
+
+    function tick(ts) {
+      if (!lastTs) lastTs = ts;
+      var delta = (ts - lastTs) / 1000;
+      lastTs = ts;
+
+      if (!paused && seqWidth > 0) {
+        offset += pixelsPerSecond * delta;
+        if (offset >= seqWidth) offset -= seqWidth;
+        track.style.transform = 'translate3d(' + -offset + 'px,0,0)';
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      cancelAnimationFrame(rafId);
+      lastTs = 0;
+      fillTrack();
+      rafId = requestAnimationFrame(tick);
+    }
+
+    if (pauseHover) {
+      root.addEventListener('mouseenter', function () {
+        paused = true;
+      });
+      root.addEventListener('mouseleave', function () {
+        paused = false;
+        lastTs = 0;
+      });
+    }
+
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(start, 150);
+    });
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(start);
+    } else {
+      start();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "max_blocks": 12,
+  "class": "announcement-bar-section",
+  "settings": [
+    {
+      "type": "range",
+      "id": "speed",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Scroll speed",
+      "info": "Pixels per second",
+      "default": 45
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_on_hover",
+      "label": "Pause on hover",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "separator",
+      "label": "Separator",
+      "default": "•"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "default": "Welcome to Sofa Parlour",
+          "label": "Text"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement bar",
+      "blocks": [
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "Complimentary delivery on select sofa orders across Pakistan"
+          }
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "Premium comfort furniture for modern living rooms"
+          }
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "New arrivals — shop sofas, chairs & sets"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

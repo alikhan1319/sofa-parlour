@@ -1,0 +1,203 @@
+/* ============================================================
+   Sofa Parlour — You may also like
+   ============================================================
+
+   The cards are the theme's own (snippets/sp-product-card.liquid, shared
+   with Best sellers). This file only changes the CONTAINER: a rail instead
+   of a grid, with a header that carries its own arrows.
+
+   Four recommendations in a four-column grid look like a second product
+   listing. The same four on a rail read as a suggestion running alongside
+   the page — and on a phone a grid of related items is mostly scrolling.
+   ============================================================ */
+
+/*  <product-recommendations> is a custom element, and an element the browser
+    does not know defaults to display: inline. On an inline box max-width and
+    auto margins do NOTHING, so the .sp-bs__wrap gutter it carries was being
+    ignored and the rail ran edge to edge.
+
+    One declaration. It has to live here rather than being assumed, because
+    nothing else in the theme gives that tag a display.                    */
+product-recommendations {
+  display: block;
+}
+
+.sp-rl__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.6rem 2.4rem;
+  margin-bottom: clamp(2rem, 3vw, 3.2rem);
+}
+
+.sp-rl__headings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.sp-rl__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sp-fg-64, rgba(31, 26, 22, 0.68));
+}
+
+.sp-rl__eyebrow::before {
+  content: '';
+  width: 3.2rem;
+  height: 1px;
+  background-color: var(--sp-brass, #9a5d06);
+}
+
+.sp-rl__heading {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(2.2rem, 3vw, 3.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--sp-fg, #1f1a16);
+}
+
+/* --- Arrows --- */
+
+.sp-rl__nav {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.8rem;
+}
+
+.sp-rl__nav[hidden] {
+  display: none;
+}
+
+.sp-rl__arrow {
+  display: grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  padding: 0;
+  border: 1px solid rgba(31, 26, 22, 0.60);
+  border-radius: 999px;
+  background-color: transparent;
+  color: var(--sp-fg-70, rgba(31, 26, 22, 0.72));
+  cursor: pointer;
+  transition: color 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              border-color 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              background-color 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.sp-rl__arrow:hover:not(:disabled) {
+  border-color: var(--sp-brass, #9a5d06);
+  background-color: rgba(154, 93, 6, 0.1);
+  color: var(--sp-fg, #1f1a16);
+}
+
+/*  Disabled at an end rather than hidden: a control that vanishes as you
+    reach the last card moves the other one under your cursor. */
+.sp-rl__arrow:disabled {
+  border-color: rgba(31, 26, 22, 0.12);
+  color: rgba(31, 26, 22, 0.35);
+  cursor: not-allowed;
+}
+
+.sp-rl__arrow:focus-visible {
+  outline: 2px solid var(--sp-brass, #9a5d06);
+  outline-offset: 3px;
+}
+
+/*  Brass, not red: the palette holds no red, and a rejected add is a
+    correction rather than an alarm. */
+.sp-rl__error {
+  margin: 0 0 1.6rem;
+  padding: 1rem 1.4rem;
+  border: 1px solid var(--sp-brass, #9a5d06);
+  border-radius: 1rem;
+  background-color: rgba(154, 93, 6, 0.1);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--sp-fg, #1f1a16);
+}
+
+.sp-rl__error[hidden] { display: none; }
+
+/* ------------------------------------------------------------
+   The rail
+   ------------------------------------------------------------
+   Overrides the shared grid into a scrolling row. The card itself is
+   untouched — only the track it sits in changes, which is what keeps this
+   section and Best sellers on the same card.
+   ------------------------------------------------------------ */
+
+.sp-rl__rail {
+  display: flex;
+  gap: clamp(1.2rem, 1.6vw, 2.4rem);
+  overflow-x: auto;
+  /* Room for the card's own hover lift and focus ring, which would
+     otherwise be clipped by the scroll container. */
+  padding: 0.4rem 0.4rem 1.6rem;
+  margin: 0 -0.4rem;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 26, 22, 0.20) transparent;
+}
+
+.sp-rl__rail::-webkit-scrollbar {
+  height: 4px;
+}
+
+.sp-rl__rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sp-rl__rail::-webkit-scrollbar-thumb {
+  background-color: rgba(31, 26, 22, 0.20);
+  border-radius: 999px;
+}
+
+/*  --sp-bs-cols is the section's "cards in view" setting. The card takes an
+    equal share of the track minus the gaps, so the next one is always partly
+    visible — the edge of a card is what tells a shopper the row scrolls. */
+.sp-rl__rail > .sp-bs__item {
+  flex: 0 0 auto;
+  width: calc(
+    (100% - (var(--sp-bs-cols, 4) - 1) * clamp(1.2rem, 1.6vw, 2.4rem)) / var(--sp-bs-cols, 4)
+  );
+  scroll-snap-align: start;
+}
+
+@media (max-width: 989px) {
+  .sp-rl__rail > .sp-bs__item {
+    width: calc((100% - 1.2rem) / 2);
+  }
+}
+
+@media (max-width: 599px) {
+  .sp-rl__rail > .sp-bs__item {
+    /* A sliver of the next card, so the row reads as scrollable */
+    width: 78%;
+  }
+
+  .sp-rl__head {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-rl__rail {
+    scroll-behavior: auto;
+  }
+
+  .sp-rl__arrow {
+    transition: none;
+  }
+}

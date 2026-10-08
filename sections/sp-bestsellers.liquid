@@ -1,0 +1,166 @@
+{%- comment -%}
+  ============================================================
+  Best sellers
+  ============================================================
+
+  Quick add is deliberate about variants: a product with one variant gets a
+  real add-to-cart, anything with options gets "Choose options" and goes to
+  the product page. Adding a guessed variant from a grid is how shoppers end
+  up returning the wrong fabric.
+
+  The action is NOT hover-only. It is always present on touch, because a
+  control that only exists on hover does not exist on a phone.
+
+  Ratings render only from a real reviews metafield. Nothing is invented:
+  under the UK Digital Markets, Competition and Consumers Act 2024,
+  publishing a rating no customer gave is an offence.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-bestsellers.css' | asset_url | stylesheet_tag }}
+{%- if section.settings.quick_view -%}
+  {{ 'sp-quickview.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'sp-quickview.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'sp-quickadd.js' | asset_url }}" defer="defer"></script>
+{%- if section.settings.tilt -%}
+  <script src="{{ 'sp-tilt.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+{%- liquid
+  assign col = collections[section.settings.collection]
+  assign limit = section.settings.products_to_show | default: 4
+  assign products = col.products
+  comment
+    nil.size is nil, not 0, and nil == 0 is false in Liquid. Testing the
+    count alone therefore misses the case that matters most: a collection
+    that does not resolve at all. The empty guard then never fires, count
+    stays nil, and (1..nil) renders no cards AND no placeholders — a
+    section that is present but blank, which is the hardest kind to debug.
+  endcomment
+  assign count = products.size | default: 0
+
+  assign is_empty = false
+  if col == blank or count == 0
+    assign is_empty = true
+    assign count = limit
+  endif
+
+  if count > limit
+    assign count = limit
+  endif
+-%}
+
+<section
+  class="sp-bs sp-bs--{{ section.settings.image_fit }}"
+  id="sp-bs-{{ section.id }}"
+  data-sp-quickadd-root
+  style="
+    --sp-bs-cols: {{ section.settings.columns | default: 4 }};
+    --sp-bs-ratio: {{ section.settings.image_ratio | default: '1 / 1' }};
+    --sp-bs-radius: {{ section.settings.radius | default: 18 }}px;
+    --sp-bs-pad-t: {{ section.settings.padding_top | default: 72 }}px;
+    --sp-bs-pad-b: {{ section.settings.padding_bottom | default: 88 }}px;
+  "
+>
+  <div class="sp-bs__wrap">
+    <div class="sp-bs__head" data-sp-reveal>
+      <div class="sp-bs__head-copy">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="sp-bs__eyebrow">
+            <span class="sp-bs__rule" aria-hidden="true"></span>
+            {{ section.settings.eyebrow | escape }}
+          </p>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="sp-bs__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.link_label != blank -%}
+        <a class="sp-bs__all" href="{{ section.settings.link_url | default: col.url | default: routes.all_products_collection_url }}">
+          {{ section.settings.link_label | escape }}
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      {%- endif -%}
+    </div>
+
+    <p
+      class="sp-bs__error"
+      data-sp-quickadd-error
+      data-generic="{{ 'sections.cart.cart_error' | t }}"
+      role="alert"
+      hidden
+    ></p>
+
+    <ul class="sp-bs__grid" role="list">
+      {%- for i in (1..count) -%}
+        {%- liquid
+          assign idx = forloop.index0
+          assign p = products[idx]
+        -%}
+        {%- render 'sp-product-card', p: p, card: section.settings, index: idx, placeholder: is_empty -%}
+      {%- endfor -%}
+    </ul>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Best sellers",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Most loved" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Best sellers" },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "View all" },
+    { "type": "url", "id": "link_url", "label": "Link" },
+    { "type": "header", "content": "Products" },
+    { "type": "collection", "id": "collection", "label": "Collection", "info": "Point this at a collection sorted by best selling." },
+    { "type": "range", "id": "products_to_show", "label": "Products", "min": 2, "max": 12, "step": 1, "default": 4 },
+    { "type": "checkbox", "id": "show_rating", "label": "Show rating stars", "info": "Only appears where a product has a real reviews metafield.", "default": true },
+    { "type": "checkbox", "id": "show_colours", "label": "Show colour swatches", "default": true },
+    { "type": "range", "id": "colour_limit", "label": "Swatches per card", "min": 2, "max": 8, "step": 1, "default": 5 },
+    { "type": "checkbox", "id": "show_wishlist", "label": "Show the save button", "default": true },
+    { "type": "text", "id": "wish_label", "label": "Save button label", "default": "Save for later" },
+    { "type": "text", "id": "no_reviews_label", "label": "No-reviews label", "default": "No reviews yet" },
+    { "type": "checkbox", "id": "show_blurb", "label": "Show a one-line description", "default": true },
+    { "type": "checkbox", "id": "tilt", "label": "Tilt the image toward the cursor", "info": "Ignored on touch devices and when reduced motion is requested.", "default": false },
+    { "type": "header", "content": "Card" },
+    { "type": "range", "id": "columns", "label": "Columns on desktop", "min": 2, "max": 5, "step": 1, "default": 4 },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        { "value": "1 / 1", "label": "Square" },
+        { "value": "4 / 5", "label": "Portrait 4:5" },
+        { "value": "3 / 4", "label": "Tall 3:4" },
+        { "value": "4 / 3", "label": "Landscape 4:3" }
+      ],
+      "default": "1 / 1"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "info": "Contain suits product shots on a plain background.",
+      "options": [
+        { "value": "contain", "label": "Show the whole image" },
+        { "value": "cover", "label": "Fill the frame" }
+      ],
+      "default": "contain"
+    },
+    { "type": "range", "id": "radius", "label": "Corner radius", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 18 },
+    { "type": "header", "content": "Labels" },
+    { "type": "text", "id": "add_label", "label": "Add button", "default": "Add To Cart" },
+    { "type": "text", "id": "options_label", "label": "Options button", "default": "Choose options" },
+    { "type": "checkbox", "id": "quick_view", "label": "Open options in a quick view", "info": "Off sends the shopper to the product page instead.", "default": true },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 }
+  ],
+  "presets": [{ "name": "Best sellers" }]
+}
+{% endschema %}

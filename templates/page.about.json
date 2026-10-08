@@ -1,0 +1,238 @@
+/*
+ * ------------------------------------------------------------
+ * The About page.
+ *
+ * Built from sections that already exist, so a change to a card
+ * or a heading lands here as well as everywhere else. Only the
+ * page hero and the people grid are new.
+ *
+ * The copy is placeholder. Names, roles and answers are yours to
+ * write - the theme states nothing about the shop on its behalf.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "hero": {
+      "type": "sp-page-hero",
+      "settings": {
+        "eyebrow": "About us",
+        "heading": "Sofas made in one workshop",
+        "text": "<p>We cut, join and upholster under one roof. Write your own story here — this is placeholder copy.</p>"
+      }
+    },
+    "story": {
+      "type": "sp-about",
+      "blocks": {
+        "b1": {
+          "type": "step",
+          "settings": {
+            "title": "The frame",
+            "text": "Beech, kiln-dried, then jointed and glued by hand."
+          }
+        },
+        "b2": {
+          "type": "step",
+          "settings": {
+            "title": "The suspension",
+            "text": "Springs laid by eye and tied off one at a time."
+          }
+        },
+        "b3": {
+          "type": "step",
+          "settings": {
+            "title": "The cover",
+            "text": "Cut on the roll, fitted on the frame, stitched in place."
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3"
+      ],
+      "settings": {}
+    },
+    "values": {
+      "type": "sp-features",
+      "blocks": {
+        "b1": {
+          "type": "feature",
+          "settings": {
+            "icon": "tools",
+            "title": "Made by hand",
+            "text": "Every piece, in one workshop."
+          }
+        },
+        "b2": {
+          "type": "feature",
+          "settings": {
+            "icon": "leaf",
+            "title": "Materials we can name",
+            "text": "From mills we have used for years."
+          }
+        },
+        "b3": {
+          "type": "feature",
+          "settings": {
+            "icon": "shield",
+            "title": "Built to be repaired",
+            "text": "Frames we service rather than replace."
+          }
+        },
+        "b4": {
+          "type": "feature",
+          "settings": {
+            "icon": "van",
+            "title": "Delivered by our own team",
+            "text": "Into the room of your choice."
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3",
+        "b4"
+      ],
+      "settings": {
+        "heading": "What we hold to"
+      }
+    },
+    "process": {
+      "type": "sp-showcase",
+      "blocks": {
+        "b1": {
+          "type": "row",
+          "settings": {
+            "title": "The workshop",
+            "text": "<p>Write about the place the work happens.</p>"
+          }
+        },
+        "b2": {
+          "type": "row",
+          "settings": {
+            "title": "The bench",
+            "text": "<p>Write about how a piece is built.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2"
+      ],
+      "settings": {
+        "eyebrow": "How we work",
+        "heading": "From timber to living room"
+      }
+    },
+    "people": {
+      "type": "sp-team",
+      "blocks": {
+        "b1": {
+          "type": "person",
+          "settings": {
+            "name": "Name",
+            "role": "Frame maker"
+          }
+        },
+        "b2": {
+          "type": "person",
+          "settings": {
+            "name": "Name",
+            "role": "Upholsterer"
+          }
+        },
+        "b3": {
+          "type": "person",
+          "settings": {
+            "name": "Name",
+            "role": "Cutter"
+          }
+        },
+        "b4": {
+          "type": "person",
+          "settings": {
+            "name": "Name",
+            "role": "Showroom"
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3",
+        "b4"
+      ],
+      "settings": {
+        "scheme": "raised"
+      }
+    },
+    "questions": {
+      "type": "sp-faq",
+      "blocks": {
+        "b1": {
+          "type": "question",
+          "settings": {
+            "question": "Where are your sofas made?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        },
+        "b2": {
+          "type": "question",
+          "settings": {
+            "question": "Can I visit the workshop?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        },
+        "b3": {
+          "type": "question",
+          "settings": {
+            "question": "Do you take commissions?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3"
+      ],
+      "settings": {
+        "eyebrow": "Ask us",
+        "heading": "Questions about us",
+        "scheme": "ground"
+      }
+    },
+    "newsletter": {
+      "type": "sp-newsletter",
+      "blocks": {
+        "b1": {
+          "type": "note",
+          "settings": {
+            "text": "About twice a month"
+          }
+        },
+        "b2": {
+          "type": "note",
+          "settings": {
+            "text": "No third parties"
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "hero",
+    "story",
+    "values",
+    "process",
+    "people",
+    "questions",
+    "newsletter"
+  ]
+}

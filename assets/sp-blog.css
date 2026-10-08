@@ -1,0 +1,408 @@
+/* ============================================================
+   Sofa Parlour — Blog
+   ============================================================
+
+   A lead article across the top, then a grid. The lead is the only place a
+   blog gets to have an opinion about its own contents, so it is given real
+   size rather than a slightly larger card.
+
+   Photographs sit on cream mounts, the way they do everywhere else in the
+   theme — editorial images are shot on light grounds and read as cut-outs
+   floating in the dark otherwise.
+
+   Hedvig Letters Sans ships ONE weight and font-synthesis-weight is none, so
+   font-weight is inert. Hierarchy is size, colour and letter-spacing.
+   ============================================================ */
+
+.sp-bl {
+  --bl-ground: #ffffff;
+  --bl-raised: #f6f3ee;
+  --bl-mount: #f6f3ee;
+
+  --bl-ink: #1f1a16;                       /* 12.83 / 11.31 : 1 */
+  --bl-ink-2: rgba(31, 26, 22, 0.72);   /*  7.36 /  6.66 : 1 */
+  --bl-ink-3: rgba(31, 26, 22, 0.62);   /*  4.91 /  4.56 : 1 — still AA */
+
+  --bl-line: rgba(31, 26, 22, 0.12);
+  --bl-edge: rgba(31, 26, 22, 0.60);     /*  3.27 : 1 — control boundaries */
+  --bl-brass: #9a5d06;                     /*  6.40 : 1 */
+
+  --bl-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --bl-fast: 160ms;
+  --bl-base: 280ms;
+  --bl-slow: 620ms;
+
+  --bl-gut: clamp(1.6rem, 4vw, 4.8rem);
+
+  padding: var(--sp-bl-pad-t, 64px) 0 var(--sp-bl-pad-b, 96px);
+  background-color: var(--bl-ground);
+  color: var(--bl-ink);
+}
+
+.sp-bl__inner {
+  max-width: 132rem;
+  margin: 0 auto;
+  padding: 0 var(--bl-gut);
+}
+
+/* ------------------------------------------------------------
+   Head
+   ------------------------------------------------------------ */
+
+.sp-bl__head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: clamp(2.8rem, 5vw, 5.6rem);
+  padding-bottom: clamp(2rem, 3vw, 3.2rem);
+  border-bottom: 1px solid var(--bl-line);
+}
+
+.sp-bl__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bl-ink-3);
+}
+
+.sp-bl__eyebrow::before {
+  content: '';
+  width: 3.2rem;
+  height: 1px;
+  background-color: var(--bl-brass);
+}
+
+.sp-bl__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(2.8rem, 4.4vw, 4.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--bl-ink);
+}
+
+.sp-bl__intro {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(1.35rem, 1.1vw, 1.55rem);
+  line-height: 1.7;
+  color: var(--bl-ink-2);
+}
+
+.sp-bl__empty {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--bl-ink-2);
+}
+
+/* ------------------------------------------------------------
+   Meta line
+   ------------------------------------------------------------ */
+
+.sp-bl__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.7rem;
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  color: var(--bl-ink-3);
+}
+
+.sp-bl__meta--lead {
+  font-size: 1.2rem;
+}
+
+.sp-bl__tag {
+  color: var(--bl-brass);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.sp-bl__dot {
+  color: rgba(31, 26, 22, 0.40);
+}
+
+/* ------------------------------------------------------------
+   Lead
+   ------------------------------------------------------------ */
+
+.sp-bl__lead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.8rem, 3vw, 3.6rem);
+  align-items: center;
+  margin-bottom: clamp(3.2rem, 5vw, 6rem);
+  padding-bottom: clamp(3.2rem, 5vw, 5.6rem);
+  border-bottom: 1px solid var(--bl-line);
+}
+
+@media (min-width: 990px) {
+  .sp-bl__lead {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+}
+
+/*  A cream mount, because editorial photography is shot on light grounds.
+    cover here rather than contain: a lead image is a crop by intent, and
+    letterboxing the one picture the page is built around looks like a
+    mistake.                                                                */
+.sp-bl__lead-media,
+.sp-bl__media {
+  display: block;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background-color: var(--bl-mount);
+}
+
+.sp-bl__lead-media {
+  aspect-ratio: 3 / 2;
+}
+
+.sp-bl__media {
+  aspect-ratio: var(--sp-bl-ratio, 4 / 3);
+}
+
+.sp-bl__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.01);
+  transition: transform var(--bl-slow) var(--bl-ease);
+}
+
+.sp-bl__lead:hover .sp-bl__img,
+.sp-bl__card:hover .sp-bl__img {
+  transform: scale(1.045);
+}
+
+.sp-bl__ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(31, 26, 22, 0.06);
+}
+
+.sp-bl__lead-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+.sp-bl__lead-title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(2.2rem, 3vw, 3.2rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.sp-bl__lead-title a,
+.sp-bl__card-title a {
+  color: var(--bl-ink);
+  text-decoration: none;
+  transition: color var(--bl-fast) var(--bl-ease);
+}
+
+.sp-bl__lead-title a:hover,
+.sp-bl__card-title a:hover {
+  color: var(--bl-brass);
+}
+
+.sp-bl__lead-text {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 1.4rem;
+  line-height: 1.7;
+  color: var(--bl-ink-2);
+}
+
+/*  Not a link: the title above it already goes to the article, and a second
+    link to the same place is one more stop for a keyboard or a screen
+    reader with nothing new at the end of it. Marked aria-hidden in the
+    markup for the same reason.                                             */
+.sp-bl__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.4rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bl-brass);
+}
+
+.sp-bl__more svg {
+  flex: 0 0 auto;
+  transition: transform var(--bl-base) var(--bl-ease);
+}
+
+.sp-bl__lead:hover .sp-bl__more svg {
+  transform: translateX(3px);
+}
+
+/* ------------------------------------------------------------
+   Grid
+   ------------------------------------------------------------ */
+
+.sp-bl__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.4rem, 3vw, 3.6rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 750px) {
+  .sp-bl__grid {
+    grid-template-columns: repeat(min(var(--sp-bl-cols, 3), 2), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .sp-bl__grid {
+    grid-template-columns: repeat(var(--sp-bl-cols, 3), minmax(0, 1fr));
+  }
+}
+
+.sp-bl__item {
+  min-width: 0;
+}
+
+.sp-bl__card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  height: 100%;
+}
+
+.sp-bl__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.sp-bl__card-title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.7rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.sp-bl__card-text {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.65;
+  color: var(--bl-ink-2);
+}
+
+/* ------------------------------------------------------------
+   Pagination
+   ------------------------------------------------------------ */
+
+.sp-bl__pagination {
+  margin-top: clamp(3.2rem, 5vw, 5.6rem);
+  padding-top: clamp(2.4rem, 3vw, 3.2rem);
+  border-top: 1px solid var(--bl-line);
+}
+
+.sp-bl__pagination .pagination__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-bl__pagination .pagination__item {
+  display: grid;
+  place-items: center;
+  min-width: 4.4rem;
+  height: 4.4rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  color: var(--bl-ink-2);
+  text-decoration: none;
+  transition: border-color var(--bl-fast) var(--bl-ease),
+              color var(--bl-fast) var(--bl-ease);
+}
+
+.sp-bl__pagination .pagination__item:hover {
+  border-color: var(--bl-edge);
+  color: var(--bl-ink);
+}
+
+.sp-bl__pagination .pagination__item--current {
+  border-color: var(--bl-brass);
+  color: var(--bl-ink);
+}
+
+/* ------------------------------------------------------------
+   Focus
+   ------------------------------------------------------------ */
+
+.sp-bl a:focus-visible {
+  outline: 2px solid var(--bl-brass);
+  outline-offset: 3px;
+  border-radius: 0.3rem;
+}
+
+/* ------------------------------------------------------------
+   Reveal
+   ------------------------------------------------------------
+   Gated on html.js, which layout/theme.liquid swaps in for no-js. Without
+   that gate a browser that never runs the reveal script would be left
+   looking at an empty page.
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js .sp-bl [data-sp-reveal],
+  html.js .sp-bl[data-sp-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--bl-slow) var(--bl-ease),
+                transform var(--bl-slow) var(--bl-ease);
+  }
+
+  html.js .sp-bl [data-sp-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  html.js .sp-bl .sp-bl__item.is-in:nth-child(2) { transition-delay: 70ms; }
+  html.js .sp-bl .sp-bl__item.is-in:nth-child(3) { transition-delay: 140ms; }
+  html.js .sp-bl .sp-bl__item.is-in:nth-child(n + 4) { transition-delay: 210ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-bl__img,
+  .sp-bl__more svg,
+  .sp-bl__lead-title a,
+  .sp-bl__card-title a,
+  .sp-bl__pagination .pagination__item {
+    transition: none;
+  }
+
+  .sp-bl__lead:hover .sp-bl__img,
+  .sp-bl__card:hover .sp-bl__img {
+    transform: scale(1.01);
+  }
+}

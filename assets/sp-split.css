@@ -1,0 +1,362 @@
+/* ============================================================
+   Split feature
+   ============================================================
+
+   One grid, two columns. The copy column is padded to the page gutter; the
+   media column runs off the outer edge of the viewport. That asymmetry is
+   the whole idea — a boxed image reads as a slide, an image that leaves the
+   frame reads as editorial.
+
+   Hedvig Letters Sans has one weight, so the ladder is size and ink:
+
+     heading  clamp(3.2-5.6rem)  -0.03em   cream
+     text     1.6rem              0        fg-70
+     eyebrow  1.15rem            +0.22em   brass, after a short rule
+     points   value 2rem / label 1.15rem uppercase
+   ============================================================ */
+
+.sp-split {
+  --sp-espresso: #1f1a16;
+  --sp-surface: #f6f3ee;
+  --sp-cream: #f6f3ee;
+  --sp-ink: #1f1a16;
+  --sp-brass: #9a5d06;
+
+  --sp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --sp-fast: 180ms;
+  --sp-base: 260ms;
+  --sp-slow: 520ms;
+
+  --sp-gut: clamp(1.6rem, 4vw, 4.8rem);
+
+  position: relative;
+  padding-block: var(--sp-split-pad-t, 0) var(--sp-split-pad-b, 0);
+  overflow: hidden;
+}
+
+/* --- Schemes --- */
+
+.sp-split--espresso { background: var(--sp-espresso); --sp-on: var(--sp-cream); }
+.sp-split--surface { background: var(--sp-surface); --sp-on: var(--sp-cream); }
+.sp-split--cream { background: var(--sp-cream); --sp-on: var(--sp-ink); }
+
+/* ============================================================
+   Layout
+   ============================================================ */
+
+.sp-split__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .sp-split__inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    /*  Height is a setting, not a fixed 62rem. A picture that fills the
+        screen stops being a feature and becomes an obstacle.            */
+    min-height: calc(var(--sp-split-h, 520px) + (var(--sp-split-inset, 32px) * 2));
+  }
+
+  /*  The copy column keeps the page gutter on its outer side and stops at
+      the container's centre line; the media column takes the rest and runs
+      to the viewport edge.                                              */
+  .sp-split--right .sp-split__copy { grid-column: 1; }
+  .sp-split--right .sp-split__media { grid-column: 2; }
+
+  .sp-split--left .sp-split__copy { grid-column: 2; }
+  .sp-split--left .sp-split__media { grid-column: 1; grid-row: 1; }
+}
+
+/* --- Copy --- */
+
+.sp-split__copy {
+  display: flex;
+  align-items: center;
+  padding: clamp(4.8rem, 7vw, 9.6rem) var(--sp-gut);
+  color: var(--sp-on);
+}
+
+.sp-split__copy-in {
+  display: grid;
+  gap: 2rem;
+  justify-items: start;
+  width: 100%;
+  max-width: 52rem;
+}
+
+@media (min-width: 900px) {
+  /*  Pull the copy toward the container's edge rather than letting it drift
+      to the middle of a wide column.                                     */
+  .sp-split--right .sp-split__copy-in { margin-left: auto; margin-right: clamp(2.4rem, 4vw, 6.4rem); }
+  .sp-split--left .sp-split__copy-in { margin-right: auto; margin-left: clamp(2.4rem, 4vw, 6.4rem); }
+}
+
+.sp-split__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sp-brass);
+}
+
+.sp-split__rule {
+  display: block;
+  width: 3.2rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.sp-split__heading {
+  margin: 0;
+  font-size: clamp(3.2rem, 4.4vw, 5.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.sp-split__text {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(1.5rem, 1.5vw, 1.7rem);
+  line-height: 1.65;
+  opacity: 0.74;
+}
+
+/* --- Points --- */
+
+.sp-split__points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.6rem 3.2rem;
+  margin: 0.8rem 0 0;
+  padding: 2rem 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(154, 93, 6, 0.32);
+  width: 100%;
+}
+
+.sp-split__point { display: grid; gap: 0.4rem; min-width: 0; }
+
+.sp-split__point-value {
+  font-size: clamp(1.8rem, 2vw, 2.2rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sp-split__point-label {
+  font-size: 1.15rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* --- Actions --- */
+
+.sp-split__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2rem 2.4rem;
+  margin-top: 0.8rem;
+}
+
+.sp-split__btn {
+  display: inline-flex;
+  align-items: center;
+  height: 5.2rem;
+  padding: 0 3.2rem;
+  border: 1px solid var(--sp-brass);
+  border-radius: 999px;
+  background: var(--sp-brass);
+  font-size: 1.2rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  transition: background var(--sp-fast) var(--sp-ease), color var(--sp-fast) var(--sp-ease);
+}
+
+.sp-split__btn:hover {
+  background: transparent;
+  color: var(--sp-brass);
+}
+
+/*  An outlined companion to the solid button: same height and radius so the
+    pair sits on one optical line, but hollow, so it reads as the quieter of
+    the two without being a bare text link.                              */
+.sp-split__ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.2rem;
+  height: 5.2rem;
+  padding: 0 0.6rem 0 2.4rem;
+  border: 1px solid rgba(31, 26, 22, 0.40);
+  border-radius: 999px;
+  font-size: 1.2rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sp-on);
+  text-decoration: none;
+  transition: border-color var(--sp-fast) var(--sp-ease),
+    background var(--sp-fast) var(--sp-ease);
+}
+
+.sp-split--cream .sp-split__ghost { border-color: rgba(31, 26, 22, 0.35); }
+
+.sp-split__ghost-arrow {
+  display: grid;
+  place-items: center;
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 999px;
+  background: rgba(31, 26, 22, 0.10);
+  transition: background var(--sp-fast) var(--sp-ease),
+    color var(--sp-fast) var(--sp-ease),
+    transform var(--sp-fast) var(--sp-ease);
+}
+
+.sp-split--cream .sp-split__ghost-arrow { background: rgba(31, 26, 22, 0.09); }
+
+.sp-split__ghost:hover {
+  border-color: var(--sp-brass);
+  background: rgba(154, 93, 6, 0.08);
+}
+
+.sp-split__ghost:hover .sp-split__ghost-arrow {
+  background: var(--sp-brass);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+/* ============================================================
+   Media
+   ============================================================ */
+
+.sp-split__media {
+  position: relative;
+  min-height: 0;
+  aspect-ratio: var(--sp-split-ratio, 4 / 3);
+}
+
+@media (min-width: 900px) {
+  /*  Height comes from the copy column at this size, so the ratio is
+      released and the picture simply fills whatever the row is.        */
+  .sp-split__media { aspect-ratio: auto; }
+}
+
+.sp-split__pic,
+.sp-split__img,
+.sp-split__ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sp-split__img {
+  object-fit: cover;
+  object-position: center;
+}
+
+/*  Contain shows the whole photograph, which is what a product shot needs:
+    cover would crop the arms off a sofa to fill the frame. It gets padding
+    so the piece is not jammed against the corners, and the surface behind
+    it becomes the mount.                                                 */
+/*  Cover is the base behaviour, but stated explicitly so the option is not
+    a class with nothing behind it.                                       */
+.sp-split--cover .sp-split__img {
+  object-fit: cover;
+  padding: 0;
+}
+
+.sp-split--contain .sp-split__media { background: var(--sp-mount, transparent); }
+
+.sp-split--contain .sp-split__img {
+  object-fit: contain;
+  object-position: center;
+  padding: clamp(1.6rem, 3vw, 4rem);
+}
+
+.sp-split--espresso.sp-split--contain { --sp-mount: var(--sp-surface); }
+.sp-split--surface.sp-split--contain { --sp-mount: var(--sp-espresso); }
+.sp-split--cream.sp-split--contain { --sp-mount: #f6f3ee; }
+
+.sp-split__ph { background: linear-gradient(150deg, var(--sp-surface), var(--sp-espresso)); }
+
+/*  The panel is inset from the viewport rather than bleeding off it, so it
+    reads as a framed plate with air around it instead of something stuck to
+    the edge of the window. The inset is a setting: drop it to 0 and the
+    panel goes back to running off the edge.                              */
+.sp-split__media {
+  margin: var(--sp-split-inset, 32px);
+  border-radius: 2.4rem;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  /*  Slightly tighter on the side facing the copy, so the gap between the
+      two columns does not read as wider than the outer margin.          */
+  .sp-split--right .sp-split__media { margin-left: calc(var(--sp-split-inset, 32px) * 0.5); }
+  .sp-split--left .sp-split__media { margin-right: calc(var(--sp-split-inset, 32px) * 0.5); }
+}
+
+/*  With no inset there is no outer edge to round against. */
+.sp-split--flush .sp-split__media { margin: 0; border-radius: 0; }
+
+.sp-split__badge {
+  position: absolute;
+  z-index: 2;
+  top: clamp(1.6rem, 3vw, 3.2rem);
+  inset-inline-end: clamp(1.6rem, 3vw, 3.2rem);
+  padding: 0.9rem 1.8rem;
+  border-radius: 999px;
+  background: var(--sp-cream);
+  color: var(--sp-ink);
+  font-size: 1.1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* --- Focus --- */
+
+.sp-split a:focus-visible {
+  outline: 2px solid var(--sp-brass);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* --- Reveal --- */
+
+.sp-split [data-sp-reveal] { opacity: 0; transform: translateY(18px); }
+
+.sp-split [data-sp-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--sp-slow) var(--sp-ease), transform var(--sp-slow) var(--sp-ease);
+}
+
+.sp-split__media[data-sp-reveal].is-in { transition-delay: 120ms; }
+
+.no-js .sp-split [data-sp-reveal] { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-split [data-sp-reveal] { opacity: 1; transform: none; transition: none; }
+  .sp-split__btn,
+  .sp-split__ghost,
+  .sp-split__ghost-arrow { transition: none; }
+}
+
+/* --- Small screens --- */
+
+@media (max-width: 899px) {
+  .sp-split__copy { padding-block: clamp(4rem, 9vw, 6.4rem); }
+  .sp-split__copy-in { gap: 1.6rem; }
+  .sp-split__points { gap: 1.2rem 2.4rem; padding-top: 1.6rem; }
+  .sp-split__btn { height: 4.8rem; padding: 0 2.4rem; }
+  .sp-split__ghost { height: 4.8rem; padding-left: 1.8rem; }
+  .sp-split__ghost-arrow { width: 3.4rem; height: 3.4rem; }
+}

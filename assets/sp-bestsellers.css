@@ -1,0 +1,602 @@
+/* ============================================================
+   Best sellers
+   ============================================================
+
+   The quick-add sits on the media panel and slides up on hover — but ONLY
+   where hovering is possible. On touch it is always visible, because a
+   control that exists only on hover does not exist on a phone. That is a
+   High-severity guideline in the UX database, and it is the single most
+   common way a "premium" product grid becomes unusable on mobile.
+
+   Espresso ground, cream type, brass on the one thing you act on.
+   ============================================================ */
+
+/*  The token set is declared on the SECTION and on the GRID.
+
+    The card (snippets/sp-product-card.liquid) is rendered by three different
+    grids now, and only one of them sits inside a .sp-bs section:
+
+      Best sellers          <section class="sp-bs"> ... .sp-bs__grid
+      You may also like     <section class="sp-bs"> ... .sp-rl__rail.sp-bs__grid
+      Collection            Dawn's own markup ...... .sp-bs__grid
+
+    Custom properties inherit down the tree, so a block declared only on
+    .sp-bs never reaches the collection grid. Every var() in the card then
+    resolves to nothing — and an undefined custom property does not fall back
+    to the previous cascade winner, it makes the declaration invalid at
+    computed-value time and the property takes its initial value. Backgrounds
+    go transparent, brass goes to currentColor, the card falls apart.
+
+    Declaring on .sp-bs__grid as well means the card carries its own colours
+    wherever it is dropped. Layout stays on .sp-bs alone, below, because the
+    section padding and ground belong to the section and not to the grid.   */
+.sp-bs,
+.sp-bs__grid {
+  --sp-bg: #ffffff;
+  --sp-surface: #f6f3ee;
+  --sp-fg: #1f1a16;
+  --sp-brass: #9a5d06;
+
+  --sp-fg-64: rgba(31, 26, 22, 0.72);
+  --sp-fg-40: rgba(31, 26, 22, 0.62);
+  --sp-line: rgba(31, 26, 22, 0.12);
+
+  --sp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --sp-fast: 180ms;
+  --sp-base: 260ms;
+  --sp-slow: 520ms;
+
+  /*  How the photograph sits in its box, as a PROPERTY rather than a class.
+
+      It used to be decided by .sp-bs--contain / .sp-bs--cover on the section
+      element. That works for Best sellers, which has one — but the card is
+      now also rendered by the collection grid and by the You may also like
+      rail, and neither of those has a .sp-bs ancestor. Neither rule matched,
+      .sp-bs__img was left with no object-fit at all, and the initial value
+      is `fill`: every photograph stretched to the shape of its box.
+
+      Declared here it has a real default wherever the card lands, and a
+      section can still override it. */
+  --sp-bs-fit: contain;
+  /*  No padding by default. `contain` already keeps the whole piece in
+      frame; adding padding on top shrinks the photograph inside a box that
+      is itself inside a card, and the result is a picture floating in the
+      middle of two nested frames. */
+  --sp-bs-fit-pad: 0rem;
+}
+
+.sp-bs {
+  padding: var(--sp-bs-pad-t, 72px) 0 var(--sp-bs-pad-b, 88px);
+  background: var(--sp-bg);
+  color: var(--sp-fg);
+}
+
+.sp-bs__wrap {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-inline: clamp(1.6rem, 4vw, 4.8rem);
+}
+
+/* --- Head --- */
+
+.sp-bs__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2.4rem;
+  margin-bottom: clamp(2.4rem, 4vw, 4rem);
+}
+
+.sp-bs__head-copy { display: grid; gap: 1.2rem; }
+
+.sp-bs__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sp-brass);
+}
+
+.sp-bs__rule { display: block; width: 3.2rem; height: 1px; background: currentColor; }
+
+.sp-bs__heading {
+  margin: 0;
+  font-size: clamp(2.6rem, 3.6vw, 4.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/*  View all — a pill, not a text link.
+
+    It carries the same language as the checkout button and the quick-view
+    CTA: outlined at rest, cream fill on hover, espresso label. Reusing one
+    button shape across the theme is what makes it read as designed rather
+    than as three separate one-offs.
+
+    The border is 0.40 alpha (3.27:1 on espresso) because at rest it is the
+    only thing marking the control's edge — WCAG 1.4.11 territory, not
+    decoration.                                                              */
+.sp-bs__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex: 0 0 auto;
+  min-height: 4.4rem;
+  padding: 0 1.8rem;
+  border: 1px solid rgba(31, 26, 22, 0.60);
+  border-radius: 999px;
+  background-color: transparent;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  color: var(--sp-fg);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--sp-base) var(--sp-ease),
+              border-color var(--sp-base) var(--sp-ease),
+              color var(--sp-base) var(--sp-ease);
+}
+
+/*  The arrow travels on hover; the label does not. Moving the whole pill's
+    padding would reflow the header row next to the heading.                 */
+.sp-bs__all svg {
+  flex: 0 0 auto;
+  transition: transform var(--sp-base) var(--sp-ease);
+}
+
+.sp-bs__all:hover {
+  border-color: var(--sp-fg);
+  background-color: var(--sp-fg);
+  color: var(--sp-bg);
+}
+
+.sp-bs__all:hover svg { transform: translateX(3px); }
+
+.sp-bs__all:focus-visible {
+  outline: 2px solid var(--sp-brass);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-bs__all,
+  .sp-bs__all svg { transition: none; }
+  .sp-bs__all:hover svg { transform: none; }
+}
+
+/* --- Grid --- */
+
+.sp-bs__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.2rem, 1.6vw, 2.4rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 750px) {
+  .sp-bs__grid { grid-template-columns: repeat(min(var(--sp-bs-cols, 4), 3), minmax(0, 1fr)); }
+}
+
+@media (min-width: 1100px) {
+  .sp-bs__grid { grid-template-columns: repeat(var(--sp-bs-cols, 4), minmax(0, 1fr)); }
+}
+
+.sp-bs__item { min-width: 0; }
+
+/* ============================================================
+   Card
+   ============================================================
+
+   A cream plate on the espresso section, so everything inside reads against
+   the card rather than against the page.
+
+   Muted body text is ink at 70%, not the 62% that looks right by eye: 62%
+   measures 4.17:1 on cream and fails AA. That is the kind of thing only a
+   measurement catches.
+   ============================================================ */
+
+.sp-bs__card {
+  /*  A white card on a white page is not a card until it has an edge. On
+      espresso the cream fill was the separation; on white the hairline is. */
+  border: 1px solid rgba(31, 26, 22, 0.12);
+  --card: #ffffff;
+  --on-card: #1f1a16;
+  --muted: rgba(31, 26, 22, 0.62);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  height: 100%;
+  padding: 1.2rem 1.2rem 1.4rem;
+  border-radius: calc(var(--sp-bs-radius, 18px) + 6px);
+  background: var(--card);
+  color: var(--on-card);
+  transition: transform var(--sp-base) var(--sp-ease),
+    box-shadow var(--sp-base) var(--sp-ease);
+}
+
+.sp-bs__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.32);
+}
+
+/* --- Media --- */
+
+.sp-bs__frame { position: relative; perspective: 1000px; }
+
+.sp-bs__media {
+  position: relative;
+  display: block;
+  aspect-ratio: var(--sp-bs-ratio, 1 / 1);
+  overflow: hidden;
+  border-radius: var(--sp-bs-radius, 18px);
+  /*  White, not a tint of the card.
+
+      Product photography is shot on white. On a cream mount the photo's own
+      white ground shows as a smaller, lighter rectangle inside the box —
+      which reads as a gap around the image, because that is exactly what it
+      is. Matching the mount to the ground the photograph was taken on makes
+      the join invisible and the picture appear to fill the frame.
+
+      This is a photographic mount, not a UI surface: it is the paper the
+      product sits on, which is why it is the one place in the theme that is
+      not part of the espresso palette. */
+  background: #fff;
+  isolation: isolate;
+}
+
+.sp-bs__stack {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform var(--sp-base) var(--sp-ease);
+}
+
+.sp-bs__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity var(--sp-base) var(--sp-ease), transform var(--sp-slow) var(--sp-ease);
+}
+
+.sp-bs__img {
+  object-fit: var(--sp-bs-fit, contain);
+  padding: var(--sp-bs-fit-pad, 0);
+}
+
+/*  The section modifiers still work — they now set the property instead of
+    styling the image directly, so Best sellers behaves exactly as before. */
+.sp-bs--cover { --sp-bs-fit: cover; --sp-bs-fit-pad: 0rem; }
+.sp-bs--contain { --sp-bs-fit: contain; --sp-bs-fit-pad: 0rem; }
+
+/*  Both photographs were visible at once, and the reason is worth keeping:
+    the earlier version left the second image at opacity 1 underneath and
+    faded the front one away. That works only when the front image COVERS
+    its box. With object-fit: contain the front image leaves transparent
+    gutters, and the one underneath showed straight through them.
+
+    So it is a true cross-fade now: the second image is hidden until hover.  */
+.sp-bs__img--front { z-index: 2; opacity: 1; }
+.sp-bs__img--back { z-index: 1; opacity: 0; }
+
+.sp-bs__card.has-swap:hover .sp-bs__img--front,
+.sp-bs__card.has-swap:focus-within .sp-bs__img--front { opacity: 0; }
+
+.sp-bs__card.has-swap:hover .sp-bs__img--back,
+.sp-bs__card.has-swap:focus-within .sp-bs__img--back { opacity: 1; }
+
+/*  A one-image product must never fade its only picture away. */
+.sp-bs__card:not(.has-swap) .sp-bs__img--front { opacity: 1; }
+
+.sp-bs__ph {
+  background: rgba(31, 26, 22, 0.05);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(150deg, rgba(31, 26, 22, 0.09), rgba(31, 26, 22, 0.03));
+}
+
+.sp-bs__shadow { display: none; }
+
+.sp-bs__card:hover .sp-bs__img { transform: scale(1.03); }
+
+/* --- Save button ---------------------------------------------------------
+
+   Sits where the rank badge used to. Cream disc on the image so it reads on
+   any photograph, filling brass once saved.                               */
+
+.sp-bs__wish {
+  position: absolute;
+  z-index: 4;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: grid;
+  place-items: center;
+  width: 3.8rem;
+  height: 3.8rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--on-card);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  transition: background var(--sp-fast) var(--sp-ease),
+    color var(--sp-fast) var(--sp-ease),
+    transform var(--sp-fast) var(--sp-ease);
+}
+
+.sp-bs__wish:hover { transform: scale(1.06); }
+
+.sp-bs__wish[aria-pressed='true'] {
+  background: var(--sp-brass);
+  color: #ffffff;
+}
+
+.sp-bs__wish[aria-pressed='true'] svg { fill: currentColor; }
+
+/* --- Title and price --- */
+
+.sp-bs__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1 1 auto;
+  padding-inline: 0.4rem;
+}
+
+.sp-bs__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.2rem;
+}
+
+/*  Colour is set here rather than inherited. The section paints cream type
+    for the espresso ground, and relying on inheritance meant the title was
+    picking that up instead of the card's own ink.                        */
+.sp-bs__title {
+  margin: 0;
+  font-size: 1.7rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--on-card);
+}
+
+.sp-bs__title a { color: var(--on-card); text-decoration: none; }
+.sp-bs__title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.sp-bs__prices {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+}
+
+.sp-bs__pill {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  background: var(--sp-brass);
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sp-bs__now { font-variant-numeric: tabular-nums; }
+
+/*  The old price sits outside the pill, not inside it: struck-through text
+    on a filled brass ground is hard to read and easy to mistake for the
+    price being charged.                                                  */
+.sp-bs__was {
+  font-size: 1.25rem;
+  color: rgba(31, 26, 22, 0.62);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*  Used by the placeholder card, which has no pill to sit in. */
+.sp-bs__price { display: flex; align-items: baseline; gap: 0.8rem; margin: 0; }
+
+/* --- Badges ---
+
+   The sale flag is an offer, so it is solid brass. The rank is information,
+   so it stays hollow — a number in a ring rather than a shout.          */
+
+.sp-bs__badge {
+  position: absolute;
+  z-index: 3;
+  top: 1.2rem;
+  left: 1.2rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  background: var(--sp-brass);
+  color: #ffffff;
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+
+/* --- Rating --- */
+
+.sp-bs__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--on-card);
+}
+
+.sp-bs__rating-none { color: rgba(31, 26, 22, 0.62); }
+.sp-bs__stars { position: relative; display: inline-block; font-size: 1.25rem; line-height: 1; letter-spacing: 0.1em; }
+.sp-bs__stars-track { color: rgba(31, 26, 22, 0.16); }
+
+/*  Clipped to the score, so 4.3 shows four and a third stars rather than
+    rounding to a number the customer did not give.                     */
+.sp-bs__stars-fill {
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
+  overflow: hidden;
+  white-space: nowrap;
+  color: #9a5d06;
+}
+
+.sp-bs__rating-num { font-variant-numeric: tabular-nums; }
+.sp-bs__rating-count { color: var(--muted); }
+
+/* --- Description --- */
+
+.sp-bs__blurb {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.55;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* --- Colour swatches --- */
+
+.sp-bs__colours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-bs__colour {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  /*  The ring is the card colour, so a pale swatch still reads as a disc
+      against the card rather than dissolving into it.                   */
+  box-shadow: inset 0 0 0 1px rgba(31, 26, 22, 0.18);
+  background-color: rgba(31, 26, 22, 0.12);
+  background-image: linear-gradient(var(--sw, transparent), var(--sw, transparent));
+}
+
+.sp-bs__colour-more {
+  font-size: 1.15rem;
+  color: rgba(31, 26, 22, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Add to cart --- */
+
+.sp-bs__action { margin-top: auto; padding-top: 0.4rem; }
+.sp-bs__form { margin: 0; }
+
+.sp-bs__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  width: 100%;
+  min-height: 4.8rem;
+  padding: 0 1.6rem;
+  border: 0;
+  border-radius: 1.2rem;
+  background: var(--on-card);
+  font-family: inherit;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  color: var(--card);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--sp-fast) var(--sp-ease), color var(--sp-fast) var(--sp-ease);
+}
+
+/*  Brass with espresso on it: 6.40:1, and the same hover the checkout
+    button, View all and the product page add button all use. The previous
+    pairing was white on bronze — off-palette, and a fourth button behaviour
+    in a theme that already had one. */
+.sp-bs__add:hover { background: var(--sp-brass); color: var(--sp-bg); }
+.sp-bs__add.is-busy { opacity: 0.6; pointer-events: none; }
+.sp-bs__add--options { line-height: 1; }
+.sp-bs__add svg { flex: 0 0 auto; }
+
+.sp-bs__card--ph { opacity: 0.5; pointer-events: none; }
+
+/* --- Focus --- */
+
+.sp-bs a:focus-visible,
+.sp-bs button:focus-visible {
+  outline: 2px solid var(--sp-brass);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* --- Reveal --- */
+
+.sp-bs [data-sp-reveal] { opacity: 0; transform: translateY(16px); }
+
+.sp-bs [data-sp-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--sp-slow) var(--sp-ease), transform var(--sp-slow) var(--sp-ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+.no-js .sp-bs [data-sp-reveal] { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-bs [data-sp-reveal] { opacity: 1; transform: none; transition: none; }
+  .sp-bs__card,
+  .sp-bs__img,
+  .sp-bs__stack,
+  .sp-bs__add { transition: none; }
+  .sp-bs__card:hover { transform: none; }
+  .sp-bs__card:hover .sp-bs__img { transform: none; }
+}
+
+/* --- Small screens --- */
+
+@media (max-width: 749px) {
+  .sp-bs__head { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
+  .sp-bs__title { font-size: 1.45rem; }
+  .sp-bs__pill { font-size: 1.2rem; padding: 0.6rem 1.1rem; }
+  .sp-bs__blurb { -webkit-line-clamp: 2; }
+  .sp-bs__add { min-height: 4.4rem; font-size: 1.2rem; }
+}
+
+/* ------------------------------------------------------------
+   Add-to-cart rejection
+   ------------------------------------------------------------
+   Written by sp-quickadd.js when Shopify refuses an add — sold out, or a
+   variant that has gone. It used to go to console.error and nowhere else,
+   which made a refused add look exactly like a dead button.
+
+   Brass, not red: the palette holds no red, and a refused add is a
+   correction rather than an alarm.
+   ------------------------------------------------------------ */
+
+.sp-bs__error {
+  margin: 0 0 1.6rem;
+  padding: 1rem 1.4rem;
+  border: 1px solid var(--sp-brass, #9a5d06);
+  border-radius: 1rem;
+  background-color: rgba(154, 93, 6, 0.1);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--sp-fg, #1f1a16);
+}
+
+.sp-bs__error[hidden] { display: none; }

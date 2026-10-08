@@ -1,0 +1,273 @@
+{%- comment -%}
+  ============================================================
+  Product card
+  ============================================================
+
+  ONE card, rendered by every grid that shows products: Best sellers, You
+  may also like, and anything added later. It lived inside sp-bestsellers
+  until a second grid needed it, and a copied card is a card that drifts —
+  the next change to the hover swap or the rating rule would have had to be
+  made twice, and would have been made once.
+
+  Called as:
+
+      {% render 'sp-product-card',
+         p: product,
+         card: settings,          a settings object, or the section's own
+         index: forloop.index0,
+         placeholder: true %}       draws an empty card, see below
+
+  `placeholder` exists because a snippet cannot see the collection the
+  section was pointed at. Best sellers renders a grid of empty cards when its
+  collection is unset or empty — a section that is present but blank is the
+  hardest kind to debug — and it has to say so explicitly.
+
+  `card` carries the display options the grid was configured with, so the
+  snippet reads card.show_rating rather than section.settings.show_rating and
+  therefore never depends on which section is rendering it.
+
+  Everything shown is the shop's own data. The rating comes only from the
+  reviews metafield a review app writes — never derived from the product id.
+  A rating no customer gave is a fabricated review, and publishing one is an
+  offence under the DMCC Act 2024.
+  ============================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign v = p.selected_or_first_available_variant
+
+assign on_sale = false
+if v.compare_at_price > v.price
+  assign on_sale = true
+endif
+
+comment
+  One variant means quick add is unambiguous. More than one and the
+  shopper has a choice to make, so send them to make it.
+endcomment
+assign single = false
+if p.variants.size == 1 and v.available
+  assign single = true
+endif
+
+comment
+  Second media for the hover swap. Skipped when the product only
+  has one image, so the card does not cross-fade to itself.
+endcomment
+assign hover_media = blank
+if p.media.size > 1
+  for m in p.media
+    if m.id == p.featured_media.id
+      continue
+    endif
+    assign hover_media = m
+    break
+  endfor
+endif
+
+comment
+  The chip names where the piece sits. Product type first because
+  a merchant sets it deliberately; the first collection is the
+  fallback because every product has one.
+endcomment
+comment
+  The colour option, found by name wherever it sits in the option
+  list, so Size / Colour and Colour / Size both work.
+endcomment
+assign colour_opt = blank
+for option in p.options_with_values
+  assign nm = option.name | downcase
+  if nm contains 'color' or nm contains 'colour' or nm contains 'fabric' or nm contains 'finish' or nm contains 'shade'
+    assign colour_opt = option
+    break
+  endif
+endfor
+
+assign save_pct = 0
+if on_sale
+  assign save_pct = v.compare_at_price | minus: v.price | times: 100.0 | divided_by: v.compare_at_price | round
+endif
+
+comment
+  One line about the piece: a short_description metafield if the
+  merchant keeps one, otherwise the opening of the description.
+endcomment
+assign blurb = p.metafields.custom.short_description.value | default: p.metafields.custom.short_description
+if blurb == blank
+  assign blurb = p.description | strip_html | truncate: 72
+endif
+
+comment
+  Rating comes only from a real reviews metafield, the one review
+  apps write. It is never derived from the product id: a rating no
+  customer gave is a fabricated review, and publishing one is an
+  offence under the DMCC Act 2024.
+endcomment
+assign rating = p.metafields.reviews.rating.value
+assign rating_count = p.metafields.reviews.rating_count
+assign rating_pct = 0
+if rating != blank
+  assign rating_pct = rating.rating | times: 1.0 | divided_by: 5.0 | times: 100
+endif
+        -%}
+<li class="sp-bs__item" style="--i: {{ index | default: 0 }};" data-sp-reveal>
+  {%- if placeholder -%}
+    <div class="sp-bs__card sp-bs__card--ph">
+      <div class="sp-bs__frame">
+        <span class="sp-bs__media"><span class="sp-bs__ph" aria-hidden="true"></span></span>
+      </div>
+      <span class="sp-bs__body">
+        <span class="sp-bs__title">Product</span>
+        <span class="sp-bs__price"><span class="sp-bs__now">&mdash;</span></span>
+      </span>
+    </div>
+  {%- else -%}
+    <div class="sp-bs__card{% if hover_media != blank %} has-swap{% endif %}">
+      <div class="sp-bs__frame" data-sp-tilt>
+        <a class="sp-bs__media" href="{{ p.url }}" tabindex="-1" aria-hidden="true">
+        <span class="sp-bs__stack">
+          {%- if p.featured_media != blank -%}
+            {%- assign p_alt = p.featured_media.alt | default: p.title -%}
+            {{
+              p.featured_media
+              | image_url: width: 900
+              | image_tag:
+                class: 'sp-bs__img sp-bs__img--front',
+                widths: '250, 400, 600, 900',
+                sizes: '(min-width: 1100px) 24vw, (min-width: 750px) 45vw, 90vw',
+                loading: 'lazy',
+                alt: p_alt
+            }}
+          {%- else -%}
+            <span class="sp-bs__ph" aria-hidden="true"></span>
+          {%- endif -%}
+
+          {%- if hover_media != blank -%}
+            {%- assign h_alt = '' -%}
+            {{
+              hover_media
+              | image_url: width: 900
+              | image_tag:
+                class: 'sp-bs__img sp-bs__img--back',
+                widths: '250, 400, 600, 900',
+                sizes: '(min-width: 1100px) 24vw, (min-width: 750px) 45vw, 90vw',
+                loading: 'lazy',
+                alt: h_alt
+            }}
+          {%- endif -%}
+
+          <span class="sp-bs__shadow" aria-hidden="true"></span>
+        </span>
+
+        {%- if on_sale -%}
+          <span class="sp-bs__badge">&minus;{{ save_pct }}%</span>
+        {%- endif -%}
+        </a>
+
+        {%- if card.show_wishlist -%}
+          <button
+            type="button"
+            class="sp-bs__wish"
+            data-sp-wish="{{ p.id }}"
+            data-sp-wish-handle="{{ p.handle }}"
+            aria-pressed="false"
+            aria-label="{{ card.wish_label | default: 'Save for later' | escape }}"
+          >
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <path d="M12 20s-7-4.6-7-9.3A4.2 4.2 0 0 1 12 8a4.2 4.2 0 0 1 7 2.7C19 15.4 12 20 12 20Z" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        {%- endif -%}
+      </div>
+
+      <div class="sp-bs__body">
+        <div class="sp-bs__row">
+          <h3 class="sp-bs__title"><a href="{{ p.url }}">{{ p.title | escape }}</a></h3>
+          <span class="sp-bs__prices">
+            <span class="sp-bs__pill">{{ v.price | money }}</span>
+            {%- if on_sale -%}
+              <s class="sp-bs__was">{{ v.compare_at_price | money }}</s>
+            {%- endif -%}
+          </span>
+        </div>
+
+        {%- if card.show_rating -%}
+          <p class="sp-bs__rating">
+            <span class="sp-bs__stars" style="--pct: {{ rating_pct }}%" role="img" aria-label="Rated {{ rating.rating }} out of 5">
+              <span class="sp-bs__stars-track" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+              <span class="sp-bs__stars-fill" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+            </span>
+            {%- if rating != blank -%}
+              <span class="sp-bs__rating-num">{{ rating.rating }}</span>
+              {%- if rating_count != blank -%}
+                <span class="sp-bs__rating-count">({{ rating_count }})</span>
+              {%- endif -%}
+            {%- else -%}
+              <span class="sp-bs__rating-none">{{ card.no_reviews_label | default: 'No reviews yet' | escape }}</span>
+            {%- endif -%}
+          </p>
+        {%- endif -%}
+
+        {%- if blurb != blank and card.show_blurb -%}
+          <p class="sp-bs__blurb">{{ blurb | escape }}</p>
+        {%- endif -%}
+
+        {%- if colour_opt != blank and card.show_colours -%}
+          <ul class="sp-bs__colours" role="list" aria-label="{{ colour_opt.name | escape }}">
+            {%- for value in colour_opt.values limit: card.colour_limit -%}
+              {%- liquid
+                comment
+                  Shopify's own swatch where the merchant set one,
+                  otherwise the value name used as a CSS colour. A name
+                  CSS cannot parse falls through to the tone underneath,
+                  so a swatch is never invisible.
+                endcomment
+                assign sw = value.swatch.color
+                if sw == blank
+                  assign sw = value | downcase | split: ' ' | last
+                endif
+              -%}
+              <li class="sp-bs__colour" style="--sw: {{ sw }};" title="{{ value | escape }}">
+                <span class="visually-hidden">{{ value | escape }}</span>
+              </li>
+            {%- endfor -%}
+            {%- assign extra = colour_opt.values.size | minus: card.colour_limit -%}
+            {%- if extra > 0 -%}
+              <li class="sp-bs__colour-more">+{{ extra }}</li>
+            {%- endif -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="sp-bs__action">
+          {%- if single -%}
+            {%- form 'product', p, class: 'sp-bs__form', novalidate: 'novalidate' -%}
+              <input type="hidden" name="id" value="{{ v.id }}">
+              <button type="submit" class="sp-bs__add" data-sp-quickadd>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M7 8h12l-1.2 8.2a1.5 1.5 0 0 1-1.5 1.3H9.4a1.5 1.5 0 0 1-1.5-1.25L6.2 5.4A1 1 0 0 0 5.2 4.5H3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="10" cy="20" r="1.15" fill="currentColor" stroke="none"/>
+                  <circle cx="17" cy="20" r="1.15" fill="currentColor" stroke="none"/>
+                </svg>
+                <span>{{ card.add_label | default: 'Add To Cart' | escape }}</span>
+              </button>
+            {%- endform -%}
+          {%- else -%}
+            <a
+              class="sp-bs__add sp-bs__add--options"
+              href="{{ p.url }}"
+              {% if card.quick_view and v.available %}data-sp-quickview{% endif %}
+            >
+              <span>
+                {%- if v.available -%}
+                  {{ card.options_label | default: 'Choose options' | escape }}
+                {%- else -%}
+                  {{ 'products.product.sold_out' | t }}
+                {%- endif -%}
+              </span>
+            </a>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  {%- endif -%}
+</li>

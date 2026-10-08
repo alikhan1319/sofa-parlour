@@ -1,0 +1,66 @@
+{%- comment -%}
+  ============================================================
+  Article meta line
+  ============================================================
+
+  Tag · date · reading time, in that order, separated by dots that are only
+  drawn between items that actually rendered — so a post with no tag does not
+  begin with a stray dot.
+
+  READING TIME IS DERIVED, NOT TYPED.
+
+    words / 200, rounded up, minimum 1
+
+  200 words a minute is the usual figure for adult silent reading of general
+  prose. Counting the article's own words means the number cannot drift away
+  from the piece the way a hand-entered one does, and nobody has to remember
+  to update it after an edit.
+
+  Called as:
+      {% render 'sp-article-meta', a: article, s: settings, lead: true %}
+  ============================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign bits = ''
+
+  if s.show_tag and a.tags.size > 0
+    assign tag = a.tags.first | escape
+    assign bits = bits | append: '<span class="sp-bl__tag">' | append: tag | append: '</span>~'
+  endif
+
+  if s.show_date
+    assign published = a.published_at | date: format: 'date'
+    assign bits = bits | append: '<time datetime="' | append: a.published_at | date: '%Y-%m-%d' | append: '">' | append: published | append: '</time>~'
+  endif
+
+  if s.show_author and a.author != blank
+    assign bits = bits | append: '<span>' | append: a.author | escape | append: '</span>~'
+  endif
+
+  if s.show_reading_time
+    assign words = a.content | strip_html | split: ' ' | size
+    assign minutes = words | divided_by: 200
+    assign remainder = words | modulo: 200
+    if remainder > 0
+      assign minutes = minutes | plus: 1
+    endif
+    if minutes < 1
+      assign minutes = 1
+    endif
+    assign bits = bits | append: '<span>' | append: minutes | append: ' min read</span>~'
+  endif
+
+  assign parts = bits | split: '~'
+-%}
+
+{%- if parts.size > 0 -%}
+  <p class="sp-bl__meta{% if lead %} sp-bl__meta--lead{% endif %}">
+    {%- for part in parts -%}
+      {{ part }}
+      {%- unless forloop.last -%}
+        <span class="sp-bl__dot" aria-hidden="true">&middot;</span>
+      {%- endunless -%}
+    {%- endfor -%}
+  </p>
+{%- endif -%}

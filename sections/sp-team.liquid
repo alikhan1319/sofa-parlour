@@ -1,0 +1,154 @@
+{%- comment -%}
+  ============================================================
+  The people
+  ============================================================
+
+  Portrait, name, role, optional line. A grid that wraps.
+
+  A person with no photograph still gets a card: their initials on a tinted
+  tile. Leaving a gap where a colleague should be is worse than a plain
+  card, and it is the case that happens most — one person joins before the
+  photographer comes back.
+
+  Every name, role and photograph is the merchant's own. There is nothing
+  here that invents a team.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-blocks.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign people = section.blocks | where: 'type', 'person'
+-%}
+
+{%- if people.size > 0 -%}
+  <section
+    class="sp-tm sp-tm--{{ s.scheme }}"
+    style="--sp-tm-pad-t: {{ s.padding_top }}px; --sp-tm-pad-b: {{ s.padding_bottom }}px; --sp-tm-cols: {{ s.columns }}; --sp-tm-ratio: {{ s.image_ratio }};"
+  >
+    <div class="sp-tm__inner">
+      {%- if s.eyebrow != blank or s.heading != blank -%}
+        <header class="sp-tm__head" data-sp-reveal>
+          {%- if s.eyebrow != blank -%}
+            <p class="sp-tm__eyebrow">{{ s.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if s.heading != blank -%}
+            <h2 class="sp-tm__heading">{{ s.heading | escape }}</h2>
+          {%- endif -%}
+          {%- if s.text != blank -%}
+            <p class="sp-tm__intro">{{ s.text | escape }}</p>
+          {%- endif -%}
+        </header>
+      {%- endif -%}
+
+      <ul class="sp-tm__grid" role="list">
+        {%- for block in people -%}
+          <li class="sp-tm__item" data-sp-reveal {{ block.shopify_attributes }}>
+            <div class="sp-tm__shot">
+              {%- if block.settings.image != blank -%}
+                {%- assign p_alt = block.settings.name -%}
+                {{
+                  block.settings.image
+                  | image_url: width: 700
+                  | image_tag: class: 'sp-tm__img', widths: '240, 360, 500, 700', sizes: '(min-width: 990px) 24vw, 44vw', loading: 'lazy', alt: p_alt
+                }}
+              {%- else -%}
+                {%- comment -%}
+                  Initials rather than a blank tile. Split on whitespace and
+                  take the first letter of the first and last words, so
+                  "Ada Wren" gives AW and a single name gives one letter.
+                {%- endcomment -%}
+                {%- liquid
+                  assign parts = block.settings.name | strip | split: ' '
+                  assign initials = ''
+                  if parts.size > 0
+                    assign initials = parts.first | slice: 0
+                  endif
+                  if parts.size > 1
+                    assign last_initial = parts.last | slice: 0
+                    assign initials = initials | append: last_initial
+                  endif
+                -%}
+                <span class="sp-tm__initials" aria-hidden="true">{{ initials | upcase }}</span>
+              {%- endif -%}
+            </div>
+
+            <div class="sp-tm__copy">
+              {%- if block.settings.name != blank -%}
+                <h3 class="sp-tm__name">{{ block.settings.name | escape }}</h3>
+              {%- endif -%}
+              {%- if block.settings.role != blank -%}
+                <p class="sp-tm__role">{{ block.settings.role | escape }}</p>
+              {%- endif -%}
+              {%- if block.settings.text != blank -%}
+                <p class="sp-tm__text">{{ block.settings.text | escape }}</p>
+              {%- endif -%}
+            </div>
+          </li>
+        {%- endfor -%}
+      </ul>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "The people",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The people" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Who makes your sofa" },
+    { "type": "text", "id": "text", "label": "Text" },
+    { "type": "range", "id": "columns", "label": "Columns on desktop", "min": 2, "max": 5, "step": 1, "default": 4 },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Portrait shape",
+      "options": [
+        { "value": "4 / 5", "label": "Portrait" },
+        { "value": "1 / 1", "label": "Square" },
+        { "value": "3 / 4", "label": "Tall" }
+      ],
+      "default": "4 / 5"
+    },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Background",
+      "options": [
+        { "value": "ground", "label": "White" },
+        { "value": "raised", "label": "Warm off-white" }
+      ],
+      "default": "ground"
+    },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 }
+  ],
+  "blocks": [
+    {
+      "type": "person",
+      "name": "Person",
+      "limit": 12,
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Portrait" },
+        { "type": "text", "id": "name", "label": "Name", "default": "Name" },
+        { "type": "text", "id": "role", "label": "Role", "default": "Role" },
+        { "type": "text", "id": "text", "label": "One line" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "The people",
+      "blocks": [
+        { "type": "person", "settings": { "name": "Name", "role": "Frame maker" } },
+        { "type": "person", "settings": { "name": "Name", "role": "Upholsterer" } },
+        { "type": "person", "settings": { "name": "Name", "role": "Cutter" } },
+        { "type": "person", "settings": { "name": "Name", "role": "Showroom" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

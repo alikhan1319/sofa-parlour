@@ -1,0 +1,697 @@
+{%- comment -%}
+  ============================================================
+  Header — two rows
+  ============================================================
+
+  Row 1   locale · search  |  wordmark  |  wishlist · cart · account
+  Row 2   main menu        |            |  secondary links
+
+  The search field is always visible rather than hidden behind an icon.
+  That is the point of this layout: on a catalogue store the field is the
+  primary way in, and a field you can see gets used.
+
+  Two Dawn contracts are honoured exactly:
+
+  1. #cart-icon-bubble — after add-to-cart the cart drawer REPLACES this
+     element's innerHTML with the output of sections/cart-icon-bubble.liquid,
+     so this renders precisely what that section renders and the CSS styles
+     Dawn's classes. Ship a bespoke icon and it becomes Dawn's after one add.
+
+  2. <predictive-search> owns the form and the results container;
+     predictive-search.js extends SearchForm and fetches
+     ?section_id=predictive-search, so both scripts must load.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-header.css' | asset_url | stylesheet_tag }}
+{{ 'sp-wishlist-drawer.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-wishlist.js' | asset_url }}" defer="defer"></script>
+{%- comment -%}
+  The saved-items drawer exists on every page, and its rows carry a real
+  product form. Without the quick-add interceptor here that form posts
+  natively and Shopify redirects to /cart — the drawer and the page the
+  shopper was on both disappear. The interceptor has to be as global as the
+  thing that depends on it, so it loads here rather than in a section.
+
+  Both files carry a re-entry guard, so the copies still loaded by
+  sp-bestsellers are inert second executions rather than double bindings.
+{%- endcomment -%}
+<script src="{{ 'sp-quickadd.js' | asset_url }}" defer="defer"></script>
+{%- if settings.predictive_search_enabled -%}
+  <link rel="stylesheet" href="{{ 'component-predictive-search.css' | asset_url }}" media="print" onload="this.media='all'">
+{%- endif -%}
+
+<link rel="stylesheet" href="{{ 'component-cart-notification.css' | asset_url }}" media="print" onload="this.media='all'">
+{%- if settings.cart_type == 'drawer' -%}
+  {{ 'component-cart-drawer.css' | asset_url | stylesheet_tag }}
+  {{ 'component-cart.css' | asset_url | stylesheet_tag }}
+  {{ 'component-totals.css' | asset_url | stylesheet_tag }}
+  {{ 'component-price.css' | asset_url | stylesheet_tag }}
+  {{ 'component-discounts.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'cart-drawer.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+<script src="{{ 'cart-notification.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'sp-header.js' | asset_url }}" defer="defer"></script>
+{%- if settings.predictive_search_enabled -%}
+  <script src="{{ 'search-form.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+{%- liquid
+  assign menu = linklists[section.settings.menu]
+  assign menu2 = linklists[section.settings.menu_secondary]
+  assign drawer_id = 'sp-hd-drawer-' | append: section.id
+-%}
+
+<header
+  class="sp-hd{% if section.settings.sticky %} sp-hd--sticky{% endif %}"
+  id="sp-hd-{{ section.id }}"
+  data-sp-hd
+  style="--sp-hd-h: {{ section.settings.height | default: 76 }}px;"
+>
+  {%- comment -%} ---------- Row 1 ---------- {%- endcomment -%}
+  <div class="sp-hd__main">
+    <div class="sp-hd__wrap sp-hd__main-inner">
+      <div class="sp-hd__lead">
+        <button
+          type="button"
+          class="sp-hd__burger"
+          data-sp-hd-drawer-open
+          aria-label="{{ 'sections.header.menu' | t }}"
+          aria-expanded="false"
+          aria-controls="{{ drawer_id }}"
+        >
+          <span class="sp-hd__burger-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+        </button>
+
+        {%- if section.settings.show_localization and localization.available_countries.size > 1 -%}
+          <div class="sp-hd__loc">
+            {%- form 'localization', class: 'sp-hd__loc-form' -%}
+              {%- render 'country-localization', localPosition: 'HeaderCountry' -%}
+              {%- if localization.available_languages.size > 1 -%}
+                {%- render 'language-localization', localPosition: 'HeaderLanguage' -%}
+              {%- endif -%}
+            {%- endform -%}
+          </div>
+        {%- endif -%}
+
+        <div class="sp-hd__search">
+          {%- if settings.predictive_search_enabled -%}
+            <predictive-search class="sp-hd__search-form" data-loading-text="{{ 'accessibility.loading' | t }}">
+          {%- else -%}
+            <search-form class="sp-hd__search-form">
+          {%- endif -%}
+            <form action="{{ routes.search_url }}" method="get" role="search" class="sp-hd__search-row">
+              <label class="visually-hidden" for="sp-hd-q-{{ section.id }}">{{ 'general.search.search' | t }}</label>
+              <svg class="sp-hd__search-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4.5 4.5" stroke-linecap="round"/>
+              </svg>
+              <input
+                class="sp-hd__search-input"
+                id="sp-hd-q-{{ section.id }}"
+                type="search"
+                name="q"
+                value="{{ search.terms | escape }}"
+                placeholder="{{ section.settings.search_placeholder | default: 'Search' | escape }}"
+                data-sp-hd-search-input
+                {%- if settings.predictive_search_enabled -%}
+                  role="combobox"
+                  aria-expanded="false"
+                  aria-owns="predictive-search-results"
+                  aria-controls="predictive-search-results"
+                  aria-haspopup="listbox"
+                  aria-autocomplete="list"
+                  autocorrect="off"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                {%- endif -%}
+              >
+              <input type="hidden" name="options[prefix]" value="last">
+            </form>
+
+            {%- if settings.predictive_search_enabled -%}
+              <div class="predictive-search predictive-search--header" tabindex="-1" data-predictive-search>
+                <div class="predictive-search__loading-state">
+                  <svg aria-hidden="true" focusable="false" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                  </svg>
+                </div>
+              </div>
+              <span class="predictive-search-status visually-hidden" role="status" aria-hidden="true"></span>
+            {%- endif -%}
+          {%- if settings.predictive_search_enabled -%}
+            </predictive-search>
+          {%- else -%}
+            </search-form>
+          {%- endif -%}
+        </div>
+      </div>
+
+      <a href="{{ routes.root_url }}" class="sp-hd__mark">
+        {%- if section.settings.logo != blank -%}
+          {%- assign logo_alt = section.settings.logo_alt | default: shop.name -%}
+          {{
+            section.settings.logo
+            | image_url: width: 600
+            | image_tag:
+              widths: '150, 250, 400, 600',
+              sizes: '(min-width: 990px) 20rem, 14rem',
+              class: 'sp-hd__mark-img',
+              alt: logo_alt
+          }}
+        {%- else -%}
+          <span class="sp-hd__mark-text">{{ shop.name }}</span>
+        {%- endif -%}
+      </a>
+
+      <div class="sp-hd__utils">
+        {%- comment -%}
+          Opens the saved-items drawer. It stays an <a> whenever the merchant
+          has set a wishlist page, so without JS the click still goes
+          somewhere useful; with JS the handler intercepts it. With no page
+          set there is nothing to fall back TO, so it is a button and says so.
+        {%- endcomment -%}
+        {%- if section.settings.show_wishlist -%}
+          {%- capture wishlist_inner -%}
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M12 20s-7-4.6-7-9.3A4.2 4.2 0 0 1 12 8a4.2 4.2 0 0 1 7 2.7C19 15.4 12 20 12 20Z" stroke-linejoin="round"/>
+            </svg>
+            <span class="sp-hd__util-label">{{ section.settings.wishlist_label | default: 'Loved' | escape }}</span>
+            <span class="sp-wl-badge" data-sp-wl-count hidden>0</span>
+          {%- endcapture -%}
+
+          {%- if section.settings.wishlist_link != blank -%}
+            <a
+              href="{{ section.settings.wishlist_link }}"
+              class="sp-hd__util"
+              data-sp-wishlist-open
+              aria-label="{{ section.settings.wishlist_label | default: 'Loved' | escape }}"
+            >{{ wishlist_inner }}</a>
+          {%- else -%}
+            <button
+              type="button"
+              class="sp-hd__util"
+              data-sp-wishlist-open
+              aria-label="{{ section.settings.wishlist_label | default: 'Loved' | escape }}"
+            >{{ wishlist_inner }}</button>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- comment -%}
+          Renders exactly what sections/cart-icon-bubble.liquid renders, because
+          the cart drawer overwrites this element's contents with that section.
+        {%- endcomment -%}
+        <a
+          href="{{ routes.cart_url }}"
+          class="sp-hd__util sp-hd__util--cart"
+          id="cart-icon-bubble"
+          {% if settings.cart_type == 'drawer' %}role="button"{% endif %}
+          aria-label="{{ 'templates.cart.cart' | t }}"
+        >
+          {%- liquid
+            if cart == empty
+              render 'icon-cart-empty'
+            else
+              render 'icon-cart'
+            endif
+          -%}
+          <span class="sp-hd__util-label">{{ 'templates.cart.cart' | t }}</span>
+          {%- if cart != empty -%}
+            <div class="cart-count-bubble">
+              {%- if cart.item_count < 100 -%}
+                <span aria-hidden="true">{{ cart.item_count }}</span>
+              {%- endif -%}
+              <span class="visually-hidden">{{ 'sections.header.cart_count' | t: count: cart.item_count }}</span>
+            </div>
+          {%- endif -%}
+        </a>
+
+        {%- if shop.customer_accounts_enabled -%}
+          <a
+            href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}"
+            class="sp-hd__account"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0" stroke-linecap="round"/>
+            </svg>
+            <span>
+              {%- if customer -%}
+                {{ 'customer.account_fallback' | t }}
+              {%- else -%}
+                {{ section.settings.account_label | default: 'Login/Signup' | escape }}
+              {%- endif -%}
+            </span>
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} ---------- Row 2 ---------- {%- endcomment -%}
+  {%- if menu.links.size > 0 or menu2.links.size > 0 -%}
+    <div class="sp-hd__sub">
+      <div class="sp-hd__wrap sp-hd__sub-inner">
+        {%- if menu.links.size > 0 -%}
+          <nav class="sp-hd__nav" aria-label="{{ section.settings.menu_label | default: 'Main menu' | escape }}">
+            <ul class="sp-hd__list">
+              {%- for link in menu.links -%}
+                <li class="sp-hd__item{% if link.links.size > 0 %} has-panel{% endif %}">
+                  {%- if link.links.size > 0 -%}
+                    <button type="button" class="sp-hd__link{% if link.active or link.child_active %} is-on{% endif %}" data-sp-hd-panel-toggle aria-expanded="false">
+                      <span>{{ link.title | escape }}</span>
+                      <svg class="sp-hd__caret" viewBox="0 0 20 20" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 8 5 5 5-5" stroke-linecap="round"/></svg>
+                    </button>
+                    {%- comment -%}
+                      The feature card, resolved in priority order:
+
+                        1. a Feature block whose "Menu item" matches this
+                           link by title — the merchant's explicit choice
+                        2. the collection this link already points at, via
+                           link.object.featured_image
+
+                      Two is the useful one: a menu entry called Sofas that
+                      links to the Sofas collection already knows what it
+                      looks like, so the panel illustrates itself with a real
+                      image from the shop and nothing has to be uploaded
+                      twice. Neither available means no card, and the columns
+                      simply take the full width.
+                    {%- endcomment -%}
+                    {%- liquid
+                      assign feature = blank
+                      assign link_key = link.title | downcase | strip
+
+                      for b in section.blocks
+                        if b.type != 'feature'
+                          continue
+                        endif
+                        assign want = b.settings.menu_item | downcase | strip
+                        if want != blank and want == link_key
+                          assign feature = b
+                          break
+                        endif
+                      endfor
+
+                      assign feature_image = feature.settings.image
+                      assign feature_heading = feature.settings.heading
+                      assign feature_text = feature.settings.text
+                      assign feature_url = feature.settings.link | default: link.url
+                      assign feature_label = feature.settings.link_label
+
+                      if feature == blank and link.type == 'collection_link'
+                        assign feature_image = link.object.featured_image
+                        assign feature_heading = link.object.title
+                        assign feature_text = ''
+                        assign feature_url = link.url
+                        assign feature_label = section.settings.panel_cta
+                      endif
+                    -%}
+
+                    <div class="sp-hd__panel" data-sp-hd-panel hidden>
+                      <div class="sp-hd__wrap sp-hd__panel-inner">
+                        <ul class="sp-hd__panel-list" role="list">
+                          {%- for child in link.links -%}
+                            {%- comment -%}
+                              Each row is resolved from what the menu entry
+                              already points at, so the picture, the code and
+                              the badge are the shop's own data rather than
+                              anything typed twice into the header.
+
+                                product_link    -> its image, SKU, real sale
+                                collection_link -> its image and size
+
+                              A link to a page or a URL has no object behind
+                              it, so it renders as a row with no tile. That is
+                              the graceful case, not a broken one.
+                            {%- endcomment -%}
+                            {%- liquid
+                              assign obj = blank
+                              assign row_img = blank
+                              assign row_eyebrow = ''
+                              assign row_save = 0
+
+                              if child.type == 'product_link'
+                                assign obj = child.object
+                                assign row_img = obj.featured_media
+                                assign row_eyebrow = obj.selected_or_first_available_variant.sku
+                                if row_eyebrow == blank
+                                  assign row_eyebrow = obj.type
+                                endif
+                                if row_eyebrow == blank
+                                  assign row_eyebrow = obj.vendor
+                                endif
+                                if obj.compare_at_price > obj.price
+                                  assign row_diff = obj.compare_at_price | minus: obj.price | times: 100.0
+                                  assign row_save = row_diff | divided_by: obj.compare_at_price | round
+                                endif
+                              elsif child.type == 'collection_link'
+                                assign obj = child.object
+                                assign row_img = obj.featured_image
+                                assign row_eyebrow = obj.products_count | append: ' pieces'
+                                if obj.products_count == 0
+                                  assign row_eyebrow = ''
+                                endif
+                              endif
+                            -%}
+
+                            <li class="sp-hd__row">
+                              <a class="sp-hd__row-link{% if child.active %} is-on{% endif %}" href="{{ child.url }}">
+                                <span class="sp-hd__row-tile{% if row_img == blank %} is-empty{% endif %}" aria-hidden="true">
+                                  {%- if row_img != blank -%}
+                                    {%- assign row_alt = '' -%}
+                                    {{
+                                      row_img
+                                      | image_url: width: 200
+                                      | image_tag: class: 'sp-hd__row-img', widths: '80, 120, 160, 200', sizes: '56px', loading: 'lazy', alt: row_alt
+                                    }}
+                                  {%- endif -%}
+                                </span>
+
+                                <span class="sp-hd__row-copy">
+                                  {%- if row_save > 0 -%}
+                                    <span class="sp-hd__row-badge">{{ 'products.product.on_sale' | t }} {{ row_save }}%</span>
+                                  {%- elsif row_eyebrow != blank -%}
+                                    <span class="sp-hd__row-eyebrow">{{ row_eyebrow | escape }}</span>
+                                  {%- endif -%}
+                                  <span class="sp-hd__row-title">{{ child.title | escape }}</span>
+                                </span>
+                              </a>
+
+                              {%- if child.links.size > 0 -%}
+                                <ul class="sp-hd__row-sub" role="list">
+                                  {%- for grandchild in child.links -%}
+                                    <li><a href="{{ grandchild.url }}" class="sp-hd__panel-sublink">{{ grandchild.title | escape }}</a></li>
+                                  {%- endfor -%}
+                                </ul>
+                              {%- endif -%}
+                            </li>
+                          {%- endfor -%}
+
+                          {%- comment -%}
+                            The Feature block, when one matches, closes the
+                            list as a wide tile rather than another row — it
+                            is a promotion, and it should not be mistaken for
+                            a menu entry.
+                          {%- endcomment -%}
+                          {%- if feature_image != blank -%}
+                            <li class="sp-hd__promo-item">
+                              <a class="sp-hd__promo" href="{{ feature_url }}">
+                                <span class="sp-hd__promo-shot">
+                                  {%- assign feature_alt = '' -%}
+                                  {{
+                                    feature_image
+                                    | image_url: width: 800
+                                    | image_tag: class: 'sp-hd__promo-img', widths: '300, 450, 600, 800', sizes: '30rem', loading: 'lazy', alt: feature_alt
+                                  }}
+                                </span>
+                                <span class="sp-hd__promo-copy">
+                                  <span class="sp-hd__promo-text">
+                                    {%- if feature_heading != blank -%}
+                                      <span class="sp-hd__promo-head">{{ feature_heading | escape }}</span>
+                                    {%- endif -%}
+                                    {%- if feature_text != blank -%}
+                                      <span class="sp-hd__promo-sub">{{ feature_text | escape }}</span>
+                                    {%- endif -%}
+                                  </span>
+                                  {%- if feature_label != blank -%}
+                                    <span class="sp-hd__promo-cta">
+                                      {{ feature_label | escape }}
+                                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+                                      </svg>
+                                    </span>
+                                  {%- endif -%}
+                                </span>
+                              </a>
+                            </li>
+                          {%- endif -%}
+                        </ul>
+                      </div>
+                    </div>
+                  {%- else -%}
+                    <a href="{{ link.url }}" class="sp-hd__link{% if link.active %} is-on{% endif %}"><span>{{ link.title | escape }}</span></a>
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+
+        {%- if menu2.links.size > 0 or section.settings.support_label != blank -%}
+          <nav class="sp-hd__meta" aria-label="{{ section.settings.menu_secondary_label | default: 'Support' | escape }}">
+            <ul class="sp-hd__meta-list">
+              {%- for link in menu2.links -%}
+                <li><a href="{{ link.url }}" class="sp-hd__meta-link">{{ link.title | escape }}</a></li>
+              {%- endfor -%}
+              {%- if section.settings.support_label != blank -%}
+                <li>
+                  <a href="{{ section.settings.support_link | default: routes.root_url }}" class="sp-hd__meta-link sp-hd__meta-link--support">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2-2.4 3.5" stroke-linecap="round"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/>
+                    </svg>
+                    {{ section.settings.support_label | escape }}
+                  </a>
+                </li>
+              {%- endif -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+      </div>
+    </div>
+  {%- endif -%}
+</header>
+
+{%- comment -%}
+  Drawer sits outside <header> so the sticky transform never becomes its
+  containing block — a fixed child of a transformed ancestor is positioned
+  against that ancestor, not the viewport, and would slide away with it.
+{%- endcomment -%}
+<div class="sp-hd__drawer" id="{{ drawer_id }}" data-sp-hd-drawer hidden>
+  <div class="sp-hd__drawer-scrim" data-sp-hd-drawer-close tabindex="-1"></div>
+  <div class="sp-hd__drawer-panel" role="dialog" aria-modal="true" aria-label="{{ 'sections.header.menu' | t }}">
+    <div class="sp-hd__drawer-head">
+      <span class="sp-hd__drawer-title">{{ shop.name }}</span>
+      <button type="button" class="sp-hd__drawer-close" data-sp-hd-drawer-close aria-label="{{ 'accessibility.close' | t }}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <nav class="sp-hd__drawer-nav" aria-label="{{ section.settings.menu_label | default: 'Main menu' | escape }}">
+      <ul class="sp-hd__drawer-list">
+        {%- for link in menu.links -%}
+          <li class="sp-hd__drawer-item">
+            {%- if link.links.size > 0 -%}
+              <button type="button" class="sp-hd__drawer-link" data-sp-hd-acc-toggle aria-expanded="false">
+                <span>{{ link.title | escape }}</span>
+                <svg class="sp-hd__caret" viewBox="0 0 20 20" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 8 5 5 5-5" stroke-linecap="round"/></svg>
+              </button>
+              <div class="sp-hd__drawer-sub" data-sp-hd-acc-panel>
+                <ul>
+                  {%- for child in link.links -%}
+                    <li><a href="{{ child.url }}" class="sp-hd__drawer-sublink">{{ child.title | escape }}</a></li>
+                  {%- endfor -%}
+                </ul>
+              </div>
+            {%- else -%}
+              <a href="{{ link.url }}" class="sp-hd__drawer-link{% if link.active %} is-on{% endif %}"><span>{{ link.title | escape }}</span></a>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- if menu2.links.size > 0 -%}
+        <ul class="sp-hd__drawer-meta">
+          {%- for link in menu2.links -%}
+            <li><a href="{{ link.url }}" class="sp-hd__drawer-metalink">{{ link.title | escape }}</a></li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </nav>
+
+    {%- if shop.customer_accounts_enabled -%}
+      <div class="sp-hd__drawer-foot">
+        <a href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}" class="sp-hd__drawer-account">
+          {%- if customer -%}{{ 'customer.account_fallback' | t }}{%- else -%}{{ section.settings.account_label | default: 'Login/Signup' | escape }}{%- endif -%}
+        </a>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{%- if settings.cart_type == 'notification' -%}
+  {%- render 'cart-notification', color_scheme: 'scheme-1', desktop_menu_type: 'dropdown' -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo"
+    },
+    {
+      "type": "text",
+      "id": "logo_alt",
+      "label": "Logo alt text"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "label": "Top row height",
+      "min": 56,
+      "max": 112,
+      "step": 4,
+      "unit": "px",
+      "default": 76
+    },
+    {
+      "type": "header",
+      "content": "Search"
+    },
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "Placeholder",
+      "default": "Search products..."
+    },
+    {
+      "type": "paragraph",
+      "content": "Predictive results follow the theme setting under Search behaviour."
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Main menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "text",
+      "id": "menu_label",
+      "label": "Main menu label",
+      "default": "Main menu"
+    },
+    {
+      "type": "link_list",
+      "id": "menu_secondary",
+      "label": "Secondary menu",
+      "info": "Shown on the right of the second row."
+    },
+    {
+      "type": "text",
+      "id": "menu_secondary_label",
+      "label": "Secondary menu label",
+      "default": "Support"
+    },
+    {
+      "type": "text",
+      "id": "panel_cta",
+      "label": "Dropdown card link text",
+      "info": "Used when the card is taken from the collection a menu item points at.",
+      "default": "Shop the collection"
+    },
+    {
+      "type": "text",
+      "id": "support_label",
+      "label": "Support link label",
+      "default": "Help & Support"
+    },
+    {
+      "type": "url",
+      "id": "support_link",
+      "label": "Support link"
+    },
+    {
+      "type": "header",
+      "content": "Utilities"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_wishlist",
+      "label": "Show saved items",
+      "info": "Opens a drawer of the shopper's saved products.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "wishlist_label",
+      "label": "Wishlist label",
+      "default": "Loved"
+    },
+    {
+      "type": "url",
+      "id": "wishlist_link",
+      "label": "Wishlist link",
+      "info": "Optional. A fallback page for shoppers without JavaScript. Use \"Show saved items\" above to hide the trigger."
+    },
+    {
+      "type": "text",
+      "id": "account_label",
+      "label": "Account label",
+      "default": "Login/Signup"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_localization",
+      "label": "Show country and language",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Behaviour"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky",
+      "label": "Stick to the top on scroll",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "feature",
+      "name": "Dropdown feature",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "menu_item",
+          "label": "Menu item",
+          "info": "Type the top-level menu name exactly, e.g. Sofas. The card shows in that dropdown."
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link text",
+          "default": "Shop the collection"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

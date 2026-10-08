@@ -1,0 +1,101 @@
+{%- comment -%}
+  ============================================================
+  Announcement bar — black ground, champagne accents
+  ============================================================
+
+  Messages are blocks. With more than one, they cross-fade on a timer with a
+  champagne progress rule counting the interval out, and the whole strip is
+  a live region so the change is announced rather than silently swapped.
+
+  With a single block nothing animates and no timer is started.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-announcement.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-announcement.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign msgs = section.blocks | where: 'type', 'announcement'
+  assign show_loc = section.settings.show_localization
+-%}
+
+{%- if msgs.size > 0 or section.settings.aside != blank -%}
+  <div
+    class="sp-ann"
+    id="sp-ann-{{ section.id }}"
+    data-sp-ann
+    data-interval="{{ section.settings.interval | default: 5 }}"
+    style="--sp-ann-h: {{ section.settings.height | default: 40 }}px;"
+  >
+    <div class="sp-ann__wrap">
+      {%- comment -%} Left slot — a standing line, not part of the rotation. {%- endcomment -%}
+      <p class="sp-ann__aside sp-ann__aside--start">
+        {%- if section.settings.aside != blank -%}{{ section.settings.aside | escape }}{%- endif -%}
+      </p>
+
+      {%- if msgs.size > 0 -%}
+        <div class="sp-ann__stage" role="status" aria-live="polite" aria-atomic="true">
+          {%- for block in msgs -%}
+            <div
+              class="sp-ann__msg{% if forloop.first %} is-current{% endif %}"
+              data-sp-ann-msg
+              {{ block.shopify_attributes }}
+            >
+              {%- if block.settings.link != blank -%}
+                <a class="sp-ann__link" href="{{ block.settings.link }}">
+                  <span>{{ block.settings.text | escape }}</span>
+                  {%- if block.settings.cta != blank -%}
+                    <em class="sp-ann__cta">{{ block.settings.cta | escape }}</em>
+                  {%- endif -%}
+                </a>
+              {%- else -%}
+                <span>{{ block.settings.text | escape }}</span>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+
+        {%- if msgs.size > 1 -%}
+          <span class="sp-ann__progress" data-sp-ann-progress aria-hidden="true"></span>
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- comment -%} Right slot — country and currency, when the shop has them. {%- endcomment -%}
+      <div class="sp-ann__aside sp-ann__aside--end">
+        {%- if show_loc -%}
+          {%- form 'localization', class: 'sp-ann__loc' -%}
+            {%- if localization.available_countries.size > 1 -%}
+              {%- render 'country-localization', localPosition: 'AnnouncementCountry' -%}
+            {%- endif -%}
+            {%- if localization.available_languages.size > 1 -%}
+              {%- render 'language-localization', localPosition: 'AnnouncementLanguage' -%}
+            {%- endif -%}
+          {%- endform -%}
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "settings": [
+    { "type": "text", "id": "aside", "label": "Standing line (left)", "info": "Shown at all times, outside the rotation.", "default": "Free UK delivery" },
+    { "type": "range", "id": "height", "label": "Height", "min": 32, "max": 64, "step": 2, "unit": "px", "default": 40 },
+    { "type": "range", "id": "interval", "label": "Seconds per message", "min": 3, "max": 12, "step": 1, "unit": "s", "default": 5 },
+    { "type": "checkbox", "id": "show_localization", "label": "Show country and language", "info": "Appears only when the store has more than one of either.", "default": false }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Message",
+      "settings": [
+        { "type": "text", "id": "text", "label": "Text", "default": "Complimentary swatches on every order" },
+        { "type": "text", "id": "cta", "label": "Link label", "info": "Set in champagne after the message." },
+        { "type": "url", "id": "link", "label": "Link" }
+      ]
+    }
+  ]
+}
+{% endschema %}

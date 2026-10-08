@@ -1,0 +1,111 @@
+{%- comment -%}
+  ============================================================
+  Page hero
+  ============================================================
+
+  An opening for a content page: eyebrow, a title set large, one paragraph,
+  and a wide photograph beneath.
+
+  The heading is an <h1> when the page has no other one, which on a content
+  page it usually does not — and a page whose largest text is an <h2> reads
+  as a fragment to a screen reader and to a search engine. The tag is a
+  setting so it can be dropped to <h2> where the template already has one.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-blocks.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign heading = s.heading | default: page.title
+-%}
+
+<section
+  class="sp-ph sp-ph--{{ s.scheme }}"
+  style="--sp-ph-pad-t: {{ s.padding_top }}px; --sp-ph-pad-b: {{ s.padding_bottom }}px; --sp-ph-ratio: {{ s.image_ratio }};"
+  data-sp-reveal
+>
+  <div class="sp-ph__inner">
+    <header class="sp-ph__head">
+      {%- if s.eyebrow != blank -%}
+        <p class="sp-ph__eyebrow">{{ s.eyebrow | escape }}</p>
+      {%- endif -%}
+
+      {%- if heading != blank -%}
+        {%- if s.heading_tag == 'h1' -%}
+          <h1 class="sp-ph__title">{{ heading | escape }}</h1>
+        {%- else -%}
+          <h2 class="sp-ph__title">{{ heading | escape }}</h2>
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if s.text != blank -%}
+        <div class="sp-ph__intro rte">{{ s.text }}</div>
+      {%- endif -%}
+    </header>
+
+    {%- if s.image != blank -%}
+      <div class="sp-ph__media">
+        {%- assign hero_alt = s.image_alt -%}
+        {{
+          s.image
+          | image_url: width: 2000
+          | image_tag: class: 'sp-ph__img', widths: '600, 900, 1200, 1600, 2000', sizes: '(min-width: 990px) 92vw, 100vw', loading: 'eager', fetchpriority: 'high', alt: hero_alt
+        }}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Page hero",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "About us" },
+    { "type": "text", "id": "heading", "label": "Heading", "info": "Leave empty to use the page's own title." },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading level",
+      "info": "Keep this an h1 unless the page already has one.",
+      "options": [
+        { "value": "h1", "label": "h1 — the page's main heading" },
+        { "value": "h2", "label": "h2 — the page has an h1 elsewhere" }
+      ],
+      "default": "h1"
+    },
+    { "type": "richtext", "id": "text", "label": "Intro", "default": "<p>We have been making sofas in one workshop since the day we started, and we still make the first of every design by hand before it goes near a production run.</p>" },
+    { "type": "header", "content": "Image" },
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "text", "id": "image_alt", "label": "Image alt text", "info": "Describe the photograph for screen readers and for when it fails to load." },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        { "value": "auto", "label": "Full image (no crop)" },
+        { "value": "16 / 9", "label": "Wide" },
+        { "value": "3 / 2", "label": "Landscape" },
+        { "value": "21 / 9", "label": "Panorama" }
+      ],
+      "default": "16 / 9"
+    },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Background",
+      "options": [
+        { "value": "ground", "label": "White" },
+        { "value": "raised", "label": "Warm off-white" }
+      ],
+      "default": "ground"
+    },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 24 }
+  ],
+  "presets": [{ "name": "Page hero" }]
+}
+{% endschema %}

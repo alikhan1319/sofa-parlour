@@ -1,0 +1,840 @@
+{%- comment -%}
+  ============================================================
+  Product
+  ============================================================
+
+  Gallery left, buy box right, then specification, accordions and the long
+  description. The buy box sticks while the gallery scrolls, because on a
+  £2,000 sofa the shopper reads a long way down and the price and the button
+  should not leave with the pictures.
+
+  WHAT IS REAL AND WHAT IS THE MERCHANT'S
+  ---------------------------------------
+  Everything a shopper could act on comes from the shop: price, compare-at,
+  availability, variants, media, SKU, and the rating metafield if one exists.
+
+  Everything persuasive is a BLOCK the merchant writes: the assurances, the
+  lead-time note, the accordions, the specification rows. The theme states no
+  warranty, quotes no delivery date and invents no rating — a furniture page
+  is exactly where that would do real harm.
+
+  Instalments come from {{ form | payment_terms }}, which renders Shopify's
+  own component with the shop's genuine terms, or nothing at all. No APR is
+  written in this file.
+
+  SHOPIFY PLUMBING — do not rename:
+    {% form 'product' %}          the cart contract
+    name="id"                     the variant
+    {{ form | payment_button }}   dynamic checkout
+    {{ form | payment_terms }}    instalment messaging
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-product.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-product.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'sp-quickadd.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign v = product.selected_or_first_available_variant
+
+  assign on_sale = false
+  if v.compare_at_price > v.price
+    assign on_sale = true
+  endif
+
+  assign save_pct = 0
+  if on_sale
+    assign save_diff = v.compare_at_price | minus: v.price | times: 100.0
+    assign save_pct = save_diff | divided_by: v.compare_at_price | round
+  endif
+
+  comment
+    Find the option that names a colour or a fabric, wherever it sits in the
+    list. Its values get picture cards instead of words, and choosing one
+    narrows the gallery — the two behaviours share this one index.
+  endcomment
+  assign colour_index = -1
+  assign colour_option = blank
+  for option in product.options_with_values
+    assign opt_name = option.name | downcase | strip
+    if opt_name contains 'colour' or opt_name contains 'color' or opt_name contains 'fabric' or opt_name contains 'finish' or opt_name contains 'shade' or opt_name contains 'material'
+      assign colour_index = forloop.index0
+      assign colour_option = option
+      break
+    endif
+  endfor
+
+  assign selected_colour = ''
+  if colour_index >= 0
+    assign selected_colour = v.options[colour_index] | downcase | strip
+  endif
+
+  assign rating = product.metafields.reviews.rating.value
+  assign rating_count = product.metafields.reviews.rating_count
+  assign rating_pct = 0
+  if rating != blank
+    assign rating_pct = rating.rating | times: 1.0 | divided_by: 5.0 | times: 100
+  endif
+
+  comment
+    Low stock, only where it is a fact. inventory_management proves Shopify
+    is tracking this variant and inventory_policy 'deny' proves the shop
+    refuses oversells, so the number means something. Without both there is
+    no stock figure to report and none is shown.
+  endcomment
+  assign low_stock = false
+  if s.show_low_stock and v.inventory_management != blank and v.inventory_policy == 'deny'
+    if v.inventory_quantity > 0 and v.inventory_quantity <= s.low_stock_threshold
+      assign low_stock = true
+    endif
+  endif
+
+  assign assurances = section.blocks | where: 'type', 'assurance'
+  assign specs = section.blocks | where: 'type', 'spec'
+  assign panels = section.blocks | where: 'type', 'accordion'
+-%}
+
+{%- comment -%}
+  Resolve every media item to a colour ONCE. Liquid has no dictionaries, so
+  the answer is captured into a delimited string and read back by index —
+  doing it inline would repeat the whole variant scan for the slides, the
+  thumbnails and again for the option cards.
+{%- endcomment -%}
+{%- capture colour_lookup -%}
+  {%- for media in product.media -%}
+    {%- liquid
+      assign media_colour = ''
+      if colour_index >= 0
+        for variant in product.variants
+          if variant.featured_media != blank and variant.featured_media.id == media.id
+            assign media_colour = variant.options[colour_index] | downcase | strip
+            break
+          endif
+        endfor
+
+        if media_colour == blank and media.alt != blank
+          assign alt_token = media.alt | downcase | strip
+          if alt_token contains 'colour:'
+            assign alt_token = alt_token | split: 'colour:' | last
+          elsif alt_token contains 'color:'
+            assign alt_token = alt_token | split: 'color:' | last
+          endif
+          assign alt_token = alt_token | split: ',' | first | split: '|' | first | strip
+
+          for value in colour_option.values
+            assign cv = value | downcase | strip
+            if alt_token == cv
+              assign media_colour = cv
+              break
+            endif
+          endfor
+
+          if media_colour == blank
+            assign best_len = 0
+            for value in colour_option.values
+              assign cv = value | downcase | strip
+              assign cv_len = cv | size
+              if alt_token contains cv and cv_len > best_len
+                assign media_colour = cv
+                assign best_len = cv_len
+              endif
+            endfor
+          endif
+        endif
+      endif
+    -%}
+    {{ media_colour }}{% unless forloop.last %}~{% endunless %}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- assign colour_map = colour_lookup | strip | split: '~' -%}
+
+<section
+  class="sp-pd"
+  style="--sp-pd-pad-t: {{ s.padding_top }}px; --sp-pd-pad-b: {{ s.padding_bottom }}px; --sp-pd-ratio: {{ s.media_ratio }};"
+  data-sp-pd
+  data-colour-index="{{ colour_index }}"
+  data-selected-colour="{{ selected_colour | escape }}"
+  data-url="{{ product.url }}"
+>
+  <div class="sp-pd__inner">
+    <div class="sp-pd__grid">
+      {%- comment -%} ---------------- Gallery ---------------- {%- endcomment -%}
+      <div class="sp-pd__media">
+        <div class="sp-pd__stage">
+          {%- if product.media.size > 0 -%}
+            {%- for media in product.media -%}
+              {%- liquid
+                assign this_colour = colour_map[forloop.index0] | strip
+                assign m_alt = media.alt | default: product.title
+              -%}
+              <div
+                class="sp-pd__slide{% if forloop.first %} is-active{% endif %}"
+                data-sp-pd-slide
+                data-media-id="{{ media.id }}"
+                data-colour="{{ this_colour | escape }}"
+                data-shared="{% if this_colour == blank %}true{% else %}false{% endif %}"
+              >
+                {%- case media.media_type -%}
+                  {%- when 'video' -%}
+                    {{ media | video_tag: image_size: '1400x', controls: true, class: 'sp-pd__img' }}
+                  {%- when 'external_video' -%}
+                    {{ media | external_video_tag: class: 'sp-pd__img' }}
+                  {%- when 'model' -%}
+                    {{ media | model_viewer_tag: image_size: '1400x', class: 'sp-pd__img' }}
+                  {%- else -%}
+                    {{
+                      media
+                      | image_url: width: 1600
+                      | image_tag:
+                        class: 'sp-pd__img',
+                        widths: '500, 700, 900, 1200, 1600',
+                        sizes: '(min-width: 990px) 52vw, 94vw',
+                        loading: 'eager',
+                        alt: m_alt
+                    }}
+                {%- endcase -%}
+              </div>
+            {%- endfor -%}
+          {%- else -%}
+            <div class="sp-pd__slide is-active" data-sp-pd-slide data-shared="true">
+              {{ 'product-1' | placeholder_svg_tag: 'sp-pd__img sp-pd__img--ph' }}
+            </div>
+          {%- endif -%}
+
+          {%- if on_sale and s.show_save -%}
+            <span class="sp-pd__save">&minus;{{ save_pct }}%</span>
+          {%- endif -%}
+        </div>
+
+        {%- if product.media.size > 1 -%}
+          <div class="sp-pd__thumbs" role="group" aria-label="{{ 'products.product.media.gallery_viewer' | t }}">
+            {%- for media in product.media -%}
+              {%- liquid
+                assign this_colour = colour_map[forloop.index0] | strip
+                assign t_alt = ''
+              -%}
+              <button
+                type="button"
+                class="sp-pd__thumb{% if forloop.first %} is-active{% endif %}"
+                data-sp-pd-thumb="{{ forloop.index0 }}"
+                data-colour="{{ this_colour | escape }}"
+                data-shared="{% if this_colour == blank %}true{% else %}false{% endif %}"
+                aria-label="{{ 'products.product.media.gallery_viewer' | t }} {{ forloop.index }}"
+                aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+              >
+                {{ media.preview_image | image_url: width: 240 | image_tag: widths: '100, 160, 240', sizes: '84px', loading: 'lazy', alt: t_alt }}
+                {%- if media.media_type != 'image' -%}
+                  <span class="sp-pd__thumb-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  </span>
+                {%- endif -%}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ---------------- Buy box ---------------- {%- endcomment -%}
+      <div class="sp-pd__buy" data-sp-quickadd-root>
+        <div class="sp-pd__head">
+          {%- if s.show_vendor and product.vendor != blank -%}
+            <p class="sp-pd__eyebrow">{{ product.vendor | escape }}</p>
+          {%- endif -%}
+
+          <h1 class="sp-pd__title">{{ product.title | escape }}</h1>
+
+          <div class="sp-pd__meta">
+            {%- if rating != blank -%}
+              <span class="sp-pd__rating">
+                <span class="sp-pd__stars" style="--pct: {{ rating_pct }}%" role="img" aria-label="{{ 'accessibility.star_reviews_info' | t: rating_value: rating.rating, rating_max: rating.scale_max }}">
+                  <span class="sp-pd__stars-track" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                  <span class="sp-pd__stars-fill" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                </span>
+                <span>{{ rating.rating }}</span>
+                {%- if rating_count != blank -%}
+                  <span class="sp-pd__muted">({{ rating_count }})</span>
+                {%- endif -%}
+              </span>
+            {%- endif -%}
+
+            {%- if s.show_sku and v.sku != blank -%}
+              <span class="sp-pd__muted" data-sp-pd-sku>{{ v.sku }}</span>
+            {%- endif -%}
+          </div>
+        </div>
+
+        {%- if low_stock -%}
+          <p class="sp-pd__stock">
+            <span class="sp-pd__stock-dot" aria-hidden="true"></span>
+            {{ s.low_stock_label | default: 'Low stock' | escape }}
+          </p>
+        {%- endif -%}
+
+        <p class="sp-pd__prices">
+          <span class="sp-pd__now" data-sp-pd-price>{{ v.price | money }}</span>
+          <s class="sp-pd__was" data-sp-pd-was {% unless on_sale %}hidden{% endunless %}>
+            {%- if on_sale -%}{{ v.compare_at_price | money }}{%- endif -%}
+          </s>
+          {%- if product.price_varies -%}
+            <span class="sp-pd__muted">{{ 'products.product.price.from_price_html' | t: price: product.price_min | money }}</span>
+          {%- endif -%}
+        </p>
+
+        {%- if s.show_tax_note -%}
+          <p class="sp-pd__taxnote">{{ 'products.product.include_taxes' | t }}</p>
+        {%- endif -%}
+
+        {%- if s.blurb != blank -%}
+          <p class="sp-pd__blurb">{{ s.blurb | escape }}</p>
+        {%- endif -%}
+
+        {%- comment -%}
+          Option pickers. The colour/fabric option gets picture cards, because
+          on upholstery the name of a weave tells a shopper almost nothing and
+          the photograph tells them everything. Every other option stays a row
+          of plain buttons.
+        {%- endcomment -%}
+        {%- unless product.has_only_default_variant -%}
+          <div class="sp-pd__options">
+            {%- for option in product.options_with_values -%}
+              {%- liquid
+                assign is_colour = false
+                if forloop.index0 == colour_index
+                  assign is_colour = true
+                endif
+              -%}
+              {%- assign opt_index = forloop.index0 -%}
+              <div
+                class="sp-pd__option{% if is_colour %} sp-pd__option--cards{% endif %}"
+                data-sp-pd-option="{{ option.name | escape }}"
+                data-sp-pd-index="{{ forloop.index0 }}"
+                {% if is_colour %}data-sp-pd-colour-group{% endif %}
+              >
+                <p class="sp-pd__option-head">
+                  <span class="sp-pd__option-name">{{ option.name | escape }}</span>
+                  <span class="sp-pd__option-value" data-sp-pd-option-value>{{ option.selected_value | escape }}</span>
+                </p>
+
+                <div class="sp-pd__values">
+                  {%- for value in option.values -%}
+                    {%- liquid
+                      assign selected = false
+                      if option.selected_value == value
+                        assign selected = true
+                      endif
+
+                      assign card_media = blank
+                      if is_colour
+                        assign want = value | downcase | strip
+                        for media in product.media
+                          assign mc = colour_map[forloop.index0] | strip
+                          if mc == want
+                            assign card_media = media
+                            break
+                          endif
+                        endfor
+                      endif
+                      assign sw = value.swatch.color
+
+                      comment
+                        The cheapest variant carrying this option value. It
+                        is what the shopper pays if they pick it and change
+                        nothing else, which is the only figure that can be
+                        stated without knowing the rest of their choices.
+                      endcomment
+                      assign val_price = blank
+                      assign val_compare = blank
+                      for pv in product.variants
+                        if pv.options[opt_index] == value
+                          if val_price == blank or pv.price < val_price
+                            assign val_price = pv.price
+                            assign val_compare = pv.compare_at_price
+                          endif
+                        endif
+                      endfor
+                    -%}
+                    <button
+                      type="button"
+                      class="sp-pd__value{% if selected %} is-active{% endif %}{% if is_colour %} sp-pd__value--card{% endif %}"
+                      data-value="{{ value | escape }}"
+                      aria-pressed="{% if selected %}true{% else %}false{% endif %}"
+                      {% if sw != blank %}style="--sw: {{ sw }};"{% endif %}
+                    >
+                      {%- if is_colour -%}
+                        <span class="sp-pd__value-shot">
+                          {%- if card_media != blank -%}
+                            {%- assign c_alt = '' -%}
+                            {{ card_media.preview_image | image_url: width: 200 | image_tag: widths: '80, 140, 200', sizes: '64px', loading: 'lazy', alt: c_alt }}
+                          {%- else -%}
+                            <span class="sp-pd__value-dot"></span>
+                          {%- endif -%}
+                        </span>
+                        <span class="sp-pd__value-copy">
+                          <span class="sp-pd__value-name">{{ value | escape }}</span>
+                          {%- if s.show_option_price and val_price != blank -%}
+                            <span class="sp-pd__value-price">
+                              {{ val_price | money }}
+                              {%- if val_compare > val_price -%}
+                                <s>{{ val_compare | money }}</s>
+                              {%- endif -%}
+                            </span>
+                          {%- endif -%}
+                        </span>
+                      {%- else -%}
+                        {{ value | escape }}
+                      {%- endif -%}
+                    </button>
+                  {%- endfor -%}
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+        {%- endunless -%}
+
+        {%- if s.note != blank -%}
+          <div class="sp-pd__note rte">{{ s.note }}</div>
+        {%- endif -%}
+
+        {%- if assurances.size > 0 -%}
+          <ul class="sp-pd__assure" role="list">
+            {%- for block in assurances -%}
+              <li class="sp-pd__assure-item" {{ block.shopify_attributes }}>
+                <span class="sp-pd__assure-icon" aria-hidden="true">
+                  {%- case block.settings.icon -%}
+                    {%- when 'shield' -%}
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3 5 6v6c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6l-7-3Z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    {%- when 'return' -%}
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h11a5 5 0 0 1 0 10H8" stroke-linecap="round" stroke-linejoin="round"/><path d="m8 5-4 4 4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    {%- when 'van' -%}
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h10v10H3zM13 9h4l3 3v4h-7z" stroke-linejoin="round"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>
+                    {%- when 'swatch' -%}
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+                    {%- else -%}
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  {%- endcase -%}
+                </span>
+                <span class="sp-pd__assure-copy">
+                  {%- if block.settings.title != blank -%}
+                    <span class="sp-pd__assure-title">{{ block.settings.title | escape }}</span>
+                  {%- endif -%}
+                  {%- if block.settings.text != blank -%}
+                    <span class="sp-pd__assure-text">{{ block.settings.text | escape }}</span>
+                  {%- endif -%}
+                </span>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        {%- form 'product', product, class: 'sp-pd__form', novalidate: 'novalidate', id: 'SpProductForm' -%}
+          <input type="hidden" name="id" value="{{ v.id }}" data-sp-pd-id>
+
+          <div class="sp-pd__buyrow">
+            <div class="sp-pd__qty">
+              <button type="button" class="sp-pd__qty-btn" data-sp-pd-qty="-1" aria-label="{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}">&minus;</button>
+              <input class="sp-pd__qty-input" type="number" name="quantity" value="1" min="1" inputmode="numeric" aria-label="{{ 'products.product.quantity.input_label' | t: product: product.title | escape }}">
+              <button type="button" class="sp-pd__qty-btn" data-sp-pd-qty="1" aria-label="{{ 'products.product.quantity.increase' | t: product: product.title | escape }}">+</button>
+            </div>
+
+            <button type="submit" class="sp-pd__add" data-sp-quickadd data-sp-pd-add {% unless v.available %}disabled{% endunless %}>
+              <span
+                data-sp-pd-add-label
+                data-soldout="{{ 'products.product.sold_out' | t }}"
+                data-unavailable="{{ 'products.product.unavailable' | t }}"
+              >
+                {%- if v.available -%}
+                  {{ s.add_label | default: 'Add to basket' | escape }}
+                {%- else -%}
+                  {{ 'products.product.sold_out' | t }}
+                {%- endif -%}
+              </span>
+              {%- if s.price_in_button -%}
+                <span class="sp-pd__add-price" data-sp-pd-add-price>{{ v.price | money }}</span>
+              {%- endif -%}
+            </button>
+          </div>
+
+          {%- if s.secondary_label != blank and s.secondary_link != blank -%}
+            <a class="sp-pd__second" href="{{ s.secondary_link }}">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7 2 2 0 0 1 6.5 3.5Z" stroke-linejoin="round"/>
+              </svg>
+              {{ s.secondary_label | escape }}
+            </a>
+          {%- endif -%}
+
+          <p
+            class="sp-pd__error"
+            data-sp-quickadd-error
+            data-generic="{{ 'sections.cart.cart_error' | t }}"
+            role="alert"
+            hidden
+          ></p>
+
+          {%- if s.show_dynamic_checkout -%}
+            <div class="sp-pd__dynamic">{{ form | payment_button }}</div>
+          {%- endif -%}
+
+          {%- comment -%}
+            Shopify's own instalment component, rendering the shop's real
+            terms. It prints nothing where the shop has none, which is why no
+            APR or provider name appears anywhere in this file.
+          {%- endcomment -%}
+          <div class="sp-pd__terms">{{ form | payment_terms }}</div>
+        {%- endform -%}
+
+
+
+        {%- comment -%}
+          App blocks. Declared in the schema, so they have to be rendered or
+          the merchant can add one in the editor and see nothing appear.
+          Counted first: a wrapper that always has a child makes :empty
+          useless, and an empty region would draw its rule under nothing.
+        {%- endcomment -%}
+        {%- assign app_count = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == '@app' -%}
+            {%- assign app_count = app_count | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- if app_count > 0 -%}
+          <div class="sp-pd__apps">
+            {%- for block in section.blocks -%}
+              {%- if block.type == '@app' -%}
+                <div class="sp-pd__app" {{ block.shopify_attributes }}>{%- render block -%}</div>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- if panels.size > 0 -%}
+          <div class="sp-pd__panels">
+            {%- for block in panels -%}
+              <details class="sp-pd__panel" {{ block.shopify_attributes }}>
+                <summary class="sp-pd__panel-head">
+                  <span>{{ block.settings.heading | escape }}</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+                </summary>
+                <div class="sp-pd__panel-body rte">{{ block.settings.text }}</div>
+              </details>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- comment -%} ---------------- Below ---------------- {%- endcomment -%}
+    {%- if product.description != blank or specs.size > 0 -%}
+      <div class="sp-pd__detail">
+        {%- if product.description != blank -%}
+          <div class="sp-pd__story">
+            {%- if s.description_heading != blank -%}
+              <h2 class="sp-pd__h2">{{ s.description_heading | escape }}</h2>
+            {%- endif -%}
+            <div class="sp-pd__rte rte">{{ product.description }}</div>
+          </div>
+        {%- endif -%}
+
+        {%- if specs.size > 0 -%}
+          <div class="sp-pd__specs">
+            {%- if s.specs_heading != blank -%}
+              <h2 class="sp-pd__h2">{{ s.specs_heading | escape }}</h2>
+            {%- endif -%}
+            <dl class="sp-pd__spec-list">
+              {%- for block in specs -%}
+                <div class="sp-pd__spec" {{ block.shopify_attributes }}>
+                  <dt class="sp-pd__spec-key">{{ block.settings.label | escape }}</dt>
+                  <dd class="sp-pd__spec-val">{{ block.settings.value | escape }}</dd>
+                </div>
+              {%- endfor -%}
+            </dl>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <script type="application/json" data-sp-pd-variants>
+    [
+      {%- for variant in product.variants -%}
+        {
+          "id": {{ variant.id }},
+          "options": {{ variant.options | json }},
+          "available": {{ variant.available }},
+          "sku": {{ variant.sku | json }},
+          "price": {{ variant.price | money | json }},
+          "compare_at": {{ variant.compare_at_price | money | json }},
+          "on_sale": {% if variant.compare_at_price > variant.price %}true{% else %}false{% endif %},
+          "media_id": {% if variant.featured_media %}{{ variant.featured_media.id }}{% else %}null{% endif %}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ]
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Product",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Gallery"
+    },
+    {
+      "type": "select",
+      "id": "media_ratio",
+      "label": "Image shape",
+      "options": [
+        {
+          "value": "1 / 1",
+          "label": "Square"
+        },
+        {
+          "value": "4 / 3",
+          "label": "Landscape"
+        },
+        {
+          "value": "4 / 5",
+          "label": "Portrait"
+        },
+        {
+          "value": "16 / 9",
+          "label": "Wide (16:9)"
+        }
+      ],
+      "default": "1 / 1",
+      "info": "The reference uses 16:9. Square keeps the whole piece in frame, which is what you asked for earlier — both are here."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_save",
+      "label": "Show the discount badge",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Buy box"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sku",
+      "label": "Show SKU",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tax_note",
+      "label": "Show the tax note",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "blurb",
+      "label": "Short description",
+      "info": "One line under the price. Leave empty to use none."
+    },
+    {
+      "type": "text",
+      "id": "add_label",
+      "label": "Add to cart label",
+      "default": "Add to basket"
+    },
+    {
+      "type": "checkbox",
+      "id": "price_in_button",
+      "label": "Show the price in the button",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_option_price",
+      "label": "Show a price on each option card",
+      "info": "The cheapest variant carrying that option.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_low_stock",
+      "label": "Show a low-stock note",
+      "info": "Only appears where Shopify is tracking inventory and refusing oversells.",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "low_stock_threshold",
+      "label": "Low stock at or below",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "text",
+      "id": "low_stock_label",
+      "label": "Low-stock text",
+      "default": "Low stock"
+    },
+    {
+      "type": "text",
+      "id": "secondary_label",
+      "label": "Secondary button",
+      "default": "Order by phone"
+    },
+    {
+      "type": "text",
+      "id": "secondary_link",
+      "label": "Secondary button link",
+      "info": "A tel: or mailto: link, or a URL. Both this and the label are needed for the button to show."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dynamic_checkout",
+      "label": "Show the dynamic checkout button",
+      "default": true
+    },
+    {
+      "type": "richtext",
+      "id": "note",
+      "label": "Lead-time note",
+      "info": "Your own wording. The theme quotes no delivery date on its own."
+    },
+    {
+      "type": "header",
+      "content": "Below the fold"
+    },
+    {
+      "type": "text",
+      "id": "description_heading",
+      "label": "Description heading",
+      "default": "About this piece"
+    },
+    {
+      "type": "text",
+      "id": "specs_heading",
+      "label": "Specification heading",
+      "default": "Specification"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 88
+    }
+  ],
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "assurance",
+      "name": "Assurance",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            {
+              "value": "shield",
+              "label": "Shield"
+            },
+            {
+              "value": "return",
+              "label": "Returns"
+            },
+            {
+              "value": "van",
+              "label": "Delivery"
+            },
+            {
+              "value": "swatch",
+              "label": "Swatch"
+            },
+            {
+              "value": "check",
+              "label": "Check"
+            }
+          ],
+          "default": "shield"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "10-year frame guarantee"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "accordion",
+      "name": "Accordion",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Delivery and returns"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "spec",
+      "name": "Specification row",
+      "limit": 16,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Frame"
+        },
+        {
+          "type": "text",
+          "id": "value",
+          "label": "Value",
+          "default": "Kiln-dried beech"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

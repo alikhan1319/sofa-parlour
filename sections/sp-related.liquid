@@ -1,0 +1,307 @@
+{%- comment -%}
+  ============================================================
+  You may also like
+  ============================================================
+
+  Shopify's own recommendations, rendered with the theme's product card.
+
+  HOW IT LOADS
+  ------------
+  <product-recommendations> (assets/global.js) fetches this same section from
+  the recommendations endpoint and replaces its OWN innerHTML with the
+  <product-recommendations> innerHTML of the response. Three things follow,
+  and breaking any one of them empties the section:
+
+    - the element must keep its tag name and its data-url
+    - everything that should survive the swap must live INSIDE it
+    - the section must render the same markup when fetched as when embedded,
+      which is why the whole body is guarded on recommendations.performed
+      rather than on anything about the current page
+
+  The cards come from snippets/sp-product-card.liquid — the same one Best
+  sellers uses, so the two grids cannot drift apart.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-bestsellers.css' | asset_url | stylesheet_tag }}
+{{ 'sp-related.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-related.js' | asset_url }}" defer="defer"></script>
+{%- if section.settings.quick_view -%}
+  {{ 'sp-quickview.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'sp-quickview.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+<script src="{{ 'sp-quickadd.js' | asset_url }}" defer="defer"></script>
+{%- if section.settings.tilt -%}
+  <script src="{{ 'sp-tilt.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+{%- liquid
+  assign s = section.settings
+  assign cols = s.columns | default: 4
+-%}
+
+<section
+  class="sp-bs"
+  style="--sp-bs-pad-t: {{ s.padding_top }}px; --sp-bs-pad-b: {{ s.padding_bottom }}px; --sp-bs-cols: {{ cols }}; --sp-bs-ratio: {{ s.image_ratio }}; --sp-bs-radius: {{ s.radius }}px;{% if s.image_fit == 'cover' %} --sp-bs-fit: cover; --sp-bs-fit-pad: 0;{% endif %}"
+>
+  {%- comment -%}
+    data-sp-quickadd-root is what makes Add to basket on these cards post to
+    the cart and open the drawer. Without it sp-quickadd.js ignores the form,
+    the browser submits natively, and Shopify redirects to /cart — the card
+    looks identical and behaves completely differently from the same card in
+    Best sellers.
+
+    It sits on the element whose innerHTML gets replaced, so it survives the
+    recommendations fetch.
+  {%- endcomment -%}
+  <product-recommendations
+    class="sp-bs__wrap"
+    data-sp-quickadd-root
+    data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ s.products_to_show }}"
+  >
+    {%- if recommendations.performed and recommendations.products_count > 0 -%}
+      <div class="sp-rl__head">
+        <div class="sp-rl__headings">
+          {%- if s.eyebrow != blank -%}
+            <p class="sp-rl__eyebrow">{{ s.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if s.heading != blank -%}
+            <h2 class="sp-rl__heading">{{ s.heading | escape }}</h2>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%}
+          The arrows are progressive enhancement: sp-related.js reveals them
+          and only while the rail actually overflows. Hidden in the markup so
+          a shopper without JavaScript is never shown two dead buttons above
+          a list that already scrolls perfectly well by touch.
+        {%- endcomment -%}
+        <div class="sp-rl__nav" data-sp-rl-nav hidden>
+          <button type="button" class="sp-rl__arrow" data-sp-rl-prev aria-label="{{ 'general.slider.previous_slide' | t }}">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M15 5 8 12l7 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button type="button" class="sp-rl__arrow" data-sp-rl-next aria-label="{{ 'general.slider.next_slide' | t }}">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m9 5 7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {%- comment -%}
+        A rail, not a grid. Four recommendations in a four-column grid look
+        like a second product listing; the same four on a rail read as a
+        suggestion running alongside the page. It also stops being a wall on
+        a phone, where a grid of related items is mostly scrolling.
+
+        Still a real <ul> that scrolls natively — the arrows only nudge it.
+      {%- endcomment -%}
+      <p
+        class="sp-rl__error"
+        data-sp-quickadd-error
+        data-generic="{{ 'sections.cart.cart_error' | t }}"
+        role="alert"
+        hidden
+      ></p>
+
+      <ul class="sp-bs__grid sp-rl__rail" data-sp-rl-rail role="list">
+        {%- for recommendation in recommendations.products -%}
+          {%- render 'sp-product-card', p: recommendation, card: section.settings, index: forloop.index0 -%}
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </product-recommendations>
+</section>
+
+{% schema %}
+{
+  "name": "You may also like",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Goes well with"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "You may also like"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Card"
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Cards in view on desktop",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 4,
+      "info": "How many fit before the rail scrolls."
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        {
+          "value": "1 / 1",
+          "label": "Square"
+        },
+        {
+          "value": "4 / 5",
+          "label": "Portrait"
+        },
+        {
+          "value": "4 / 3",
+          "label": "Landscape"
+        }
+      ],
+      "default": "1 / 1"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        {
+          "value": "contain",
+          "label": "Contain"
+        },
+        {
+          "value": "cover",
+          "label": "Cover"
+        }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "range",
+      "id": "radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "Show rating stars",
+      "info": "Only appears where a product has a real reviews metafield.",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "no_reviews_label",
+      "label": "No-reviews label",
+      "default": "No reviews yet"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_colours",
+      "label": "Show colour swatches",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "colour_limit",
+      "label": "Swatches per card",
+      "min": 2,
+      "max": 8,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "checkbox",
+      "id": "show_blurb",
+      "label": "Show a one-line description",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_wishlist",
+      "label": "Show the save button",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "wish_label",
+      "label": "Save button label",
+      "default": "Save for later"
+    },
+    {
+      "type": "checkbox",
+      "id": "tilt",
+      "label": "Tilt the image toward the cursor",
+      "info": "Ignored on touch devices and when reduced motion is requested.",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Buttons"
+    },
+    {
+      "type": "text",
+      "id": "add_label",
+      "label": "Add button",
+      "default": "Add to basket"
+    },
+    {
+      "type": "text",
+      "id": "options_label",
+      "label": "Options button",
+      "default": "Choose options"
+    },
+    {
+      "type": "checkbox",
+      "id": "quick_view",
+      "label": "Open options in a quick view",
+      "info": "Off sends the shopper to the product page instead.",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 72
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 88
+    }
+  ]
+}
+{% endschema %}

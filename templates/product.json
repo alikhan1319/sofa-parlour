@@ -1,0 +1,248 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "sp-product",
+      "blocks": {
+        "a1": {
+          "type": "assurance",
+          "settings": {
+            "icon": "shield",
+            "title": "10-year frame guarantee",
+            "text": "On every frame we build."
+          }
+        },
+        "a2": {
+          "type": "assurance",
+          "settings": {
+            "icon": "van",
+            "title": "Delivered by our own team",
+            "text": "Into the room of your choice."
+          }
+        },
+        "a3": {
+          "type": "assurance",
+          "settings": {
+            "icon": "swatch",
+            "title": "Free fabric swatches",
+            "text": "Order before you decide."
+          }
+        },
+        "p1": {
+          "type": "accordion",
+          "settings": {
+            "heading": "Delivery and returns"
+          }
+        },
+        "p2": {
+          "type": "accordion",
+          "settings": {
+            "heading": "Care and cleaning"
+          }
+        },
+        "s1": {
+          "type": "spec",
+          "settings": {
+            "label": "Frame",
+            "value": "Kiln-dried beech"
+          }
+        },
+        "s2": {
+          "type": "spec",
+          "settings": {
+            "label": "Suspension",
+            "value": "Serpentine springs"
+          }
+        },
+        "s3": {
+          "type": "spec",
+          "settings": {
+            "label": "Made in",
+            "value": "Britain"
+          }
+        }
+      },
+      "block_order": [
+        "a1",
+        "a2",
+        "a3",
+        "p1",
+        "p2",
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "settings": {}
+    },
+    "layers": {
+      "type": "sp-layers",
+      "blocks": {
+        "l1": {
+          "type": "layer",
+          "settings": {
+            "title": "Fibre wrap",
+            "text": "A soft top layer that takes the edge off the seat and settles as you sit."
+          }
+        },
+        "l2": {
+          "type": "layer",
+          "settings": {
+            "title": "Feather and down fill",
+            "text": "Sits between the wrap and the core, and is the part you plump."
+          }
+        },
+        "l3": {
+          "type": "layer",
+          "settings": {
+            "title": "Foam core",
+            "text": "The block that holds the shape of the cushion year after year."
+          }
+        }
+      },
+      "block_order": [
+        "l1",
+        "l2",
+        "l3"
+      ],
+      "settings": {}
+    },
+    "related": {
+      "type": "sp-related",
+      "settings": {}
+    },
+    "features": {
+      "type": "sp-features",
+      "blocks": {
+        "b1": {
+          "type": "feature",
+          "settings": {
+            "icon": "shield",
+            "title": "10-year frame guarantee",
+            "text": "On every frame we build."
+          }
+        },
+        "b2": {
+          "type": "feature",
+          "settings": {
+            "icon": "van",
+            "title": "Delivered by our own team",
+            "text": "Into the room of your choice."
+          }
+        },
+        "b3": {
+          "type": "feature",
+          "settings": {
+            "icon": "return",
+            "title": "14-day returns",
+            "text": "If it is not right, it goes back."
+          }
+        },
+        "b4": {
+          "type": "feature",
+          "settings": {
+            "icon": "swatch",
+            "title": "Free fabric swatches",
+            "text": "Order before you decide."
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3",
+        "b4"
+      ],
+      "settings": {}
+    },
+    "showcase": {
+      "type": "sp-showcase",
+      "blocks": {
+        "b1": {
+          "type": "row",
+          "settings": {
+            "title": "Hand-tied springs",
+            "text": "<p>Eight knots to each spring, laid by eye. It is the reason the seat holds its shape after a decade rather than a season.</p>"
+          }
+        },
+        "b2": {
+          "type": "row",
+          "settings": {
+            "title": "A frame that is jointed, not stapled",
+            "text": "<p>Beech, kiln-dried for eleven weeks, then glued and screwed at every joint.</p>"
+          }
+        },
+        "b3": {
+          "type": "row",
+          "settings": {
+            "title": "Covers you can take off",
+            "text": "<p>Every cover unzips, so a spill is a wash rather than a replacement.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3"
+      ],
+      "settings": {
+        "image_ratio": "auto"
+      }
+    },
+    "faq": {
+      "type": "sp-faq",
+      "blocks": {
+        "b1": {
+          "type": "question",
+          "settings": {
+            "question": "How long will my order take?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        },
+        "b2": {
+          "type": "question",
+          "settings": {
+            "question": "Can I order a fabric swatch first?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        },
+        "b3": {
+          "type": "question",
+          "settings": {
+            "question": "Will it fit through my door?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        },
+        "b4": {
+          "type": "question",
+          "settings": {
+            "question": "What if I change my mind?",
+            "answer": "<p>Write your own answer here.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "b1",
+        "b2",
+        "b3",
+        "b4"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "features",
+    "layers",
+    "showcase",
+    "faq",
+    "related"
+  ]
+}

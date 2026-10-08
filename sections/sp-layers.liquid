@@ -1,0 +1,240 @@
+{%- comment -%}
+  ============================================================
+  Layers — what is inside the cushion
+  ============================================================
+
+  A photograph on one side, a numbered key on the other. The numbering is
+  not decoration: these are stacked in a real order, top layer to core, and
+  the figures are what tie each name to its place in that order.
+
+  ONE photograph carries the picture. An earlier version could also build an
+  exploded stack from a cut-out per layer; it was clever and it read as a
+  pile of slabs. A real cutaway photograph says in one image what the
+  construction never quite did.
+
+  With no photograph the numbered key still reads on its own, which is the
+  information anyway.
+
+  Every word is the merchant's. The theme names no foam, claims no density
+  and rates no comfort.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-layers.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign layers = section.blocks | where: 'type', 'layer'
+-%}
+
+<section
+  class="sp-ly sp-ly--{{ s.scheme }} sp-ly--{{ s.media_side }}"
+  style="--sp-ly-pad-t: {{ s.padding_top }}px; --sp-ly-pad-b: {{ s.padding_bottom }}px;"
+  data-sp-reveal
+>
+  <div class="sp-ly__inner">
+    {%- if s.heading != blank or s.text != blank -%}
+      <header class="sp-ly__head">
+        {%- if s.eyebrow != blank -%}
+          <p class="sp-ly__eyebrow">{{ s.eyebrow | escape }}</p>
+        {%- endif -%}
+        {%- if s.heading != blank -%}
+          <h2 class="sp-ly__heading">{{ s.heading | escape }}</h2>
+        {%- endif -%}
+        {%- if s.text != blank -%}
+          <p class="sp-ly__intro">{{ s.text | escape }}</p>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    {%- if layers.size > 0 -%}
+      <div class="sp-ly__grid">
+        {%- comment -%}
+          One photograph, with the numbered key beside it doing the naming.
+
+          Numbered pins over the image were tried and removed: without a
+          coordinate set per layer they all landed on the same default and
+          read as a cluster of dots rather than as labels. The key ties each
+          name to its place in the order at every screen width, with nothing
+          for anyone to position.
+
+          Decorative as a whole: every layer is named in the key, so
+          announcing the picture too would have a screen reader read the
+          same list twice.
+        {%- endcomment -%}
+        <div class="sp-ly__stack" aria-hidden="true">
+          {%- if s.image != blank -%}
+            {%- assign whole_alt = '' -%}
+            {{
+              s.image
+              | image_url: width: 1600
+              | image_tag: class: 'sp-ly__img', widths: '400, 700, 1000, 1300, 1600', sizes: '(min-width: 990px) 50vw, 92vw', loading: 'lazy', alt: whole_alt
+            }}
+
+          {%- else -%}
+            {{ 'image' | placeholder_svg_tag: 'sp-ly__img sp-ly__img--ph' }}
+          {%- endif -%}
+        </div>
+
+        <ol class="sp-ly__key">
+          {%- for block in layers -%}
+            <li class="sp-ly__item" {{ block.shopify_attributes }}>
+              <span class="sp-ly__num" aria-hidden="true">{{ forloop.index }}</span>
+              <div class="sp-ly__copy">
+                {%- if block.settings.title != blank -%}
+                  <h3 class="sp-ly__title">{{ block.settings.title | escape }}</h3>
+                {%- endif -%}
+                {%- if block.settings.text != blank -%}
+                  <p class="sp-ly__text">{{ block.settings.text | escape }}</p>
+                {%- endif -%}
+              </div>
+            </li>
+          {%- endfor -%}
+        </ol>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Layers",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Inside the cushion"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Balanced comfort and support"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Text",
+      "default": "Gentle sink-in comfort over a core that holds its shape. A versatile feel that suits everyday sitting."
+    },
+    {
+      "type": "header",
+      "content": "Picture"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image",
+      "info": "A cutaway or layered photograph. The numbered key beside it names each layer."
+    },
+    {
+      "type": "select",
+      "id": "media_side",
+      "label": "Picture side",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Background",
+      "options": [
+        {
+          "value": "ground",
+          "label": "Espresso"
+        },
+        {
+          "value": "raised",
+          "label": "Raised"
+        }
+      ],
+      "default": "raised"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 88
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ],
+  "blocks": [
+    {
+      "type": "layer",
+      "name": "Layer",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Fibre wrap"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "A soft top layer that takes the edge off the seat and settles as you sit."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Layers",
+      "blocks": [
+        {
+          "type": "layer",
+          "settings": {
+            "title": "Fibre wrap",
+            "text": "A soft top layer that takes the edge off the seat and settles as you sit."
+          }
+        },
+        {
+          "type": "layer",
+          "settings": {
+            "title": "Feather and down fill",
+            "text": "Sits between the wrap and the core, and is the part you plump."
+          }
+        },
+        {
+          "type": "layer",
+          "settings": {
+            "title": "Foam core",
+            "text": "The block that holds the shape of the cushion year after year."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

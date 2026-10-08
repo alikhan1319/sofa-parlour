@@ -1,0 +1,275 @@
+{%- comment -%}
+  ============================================================
+  Categories — tinted panels
+  ============================================================
+
+  Each card is a coloured panel carrying a small parent label, a large
+  title, an optional button, and a cut-out product image.
+
+  Text colour is NOT a setting. Each panel's colour is measured against both
+  candidate type colours with color_contrast and the more legible one wins,
+  so a merchant can pick any panel colour without having to think about it.
+  Pick pale sand and the type goes dark; pick deep coffee and it goes cream.
+
+  Layout is a mirrored bento on a four-column grid, repeating every six:
+
+      wide  |  sq  |  sq
+       sq   |  sq  |  wide
+
+  Wide panels put the image beside the text; square ones stack it beneath.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-categories.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign blocks = section.blocks | where: 'type', 'category'
+  assign picked = section.settings.collection_list
+
+  assign use_blocks = false
+  if blocks.size > 0
+    assign use_blocks = true
+  endif
+
+  assign count = blocks.size
+  if use_blocks == false
+    assign count = picked.size
+  endif
+
+  comment
+    A section that renders nothing looks identical to one that failed to
+    install, so an empty state draws placeholder panels instead.
+  endcomment
+  assign is_empty = false
+  if count == 0
+    assign is_empty = true
+    assign count = 6
+  endif
+
+  comment
+    Default tints, used when a block leaves the colour empty and for the
+    collection-list path. All six are drawn from the store's espresso and
+    brass palette, so the panels read as one family rather than as swatches
+    borrowed from somewhere else.
+  endcomment
+  assign tints = section.settings.default_tints | default: '#f0e9dd,#4a3f35,#c9a227,#5a4334,#e8dcc2,#6b5744' | split: ','
+-%}
+
+{%- if count > 0 -%}
+  <section
+    class="sp-cats sp-cats--{{ section.settings.image_fit | default: 'fill' }}"
+    id="sp-cats-{{ section.id }}"
+    style="
+      --sp-cats-radius: {{ section.settings.radius | default: 18 }}px;
+      --sp-cats-scrim: {{ section.settings.scrim | default: 55 | divided_by: 100.0 }};
+      --sp-cats-gap: {{ section.settings.gap | default: 20 }}px;
+      --sp-cats-pad-t: {{ section.settings.padding_top | default: 72 }}px;
+      --sp-cats-pad-b: {{ section.settings.padding_bottom | default: 88 }}px;
+    "
+  >
+    <div class="sp-cats__wrap">
+      {%- if section.settings.heading != blank or section.settings.eyebrow != blank -%}
+        <div class="sp-cats__head sp-cats__head--{{ section.settings.align }}" data-sp-reveal>
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="sp-cats__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <h2 class="sp-cats__heading">{{ section.settings.heading | escape }}</h2>
+          {%- endif -%}
+          {%- if section.settings.text != blank -%}
+            <p class="sp-cats__text">{{ section.settings.text | escape }}</p>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      <ul class="sp-cats__grid" role="list">
+        {%- for i in (1..count) -%}
+          {%- liquid
+            assign idx = forloop.index0
+
+            if is_empty
+              assign col = blank
+              assign title = 'Category'
+              assign label = 'Collection'
+              assign img = blank
+              assign href = routes.all_products_collection_url
+              assign attrs = ''
+              assign tint = blank
+              assign btn = blank
+            elsif use_blocks
+              assign blk = blocks[idx]
+              assign col = collections[blk.settings.collection]
+              assign title = blk.settings.heading | default: col.title
+              assign label = blk.settings.label
+              assign img = blk.settings.image
+              assign href = blk.settings.link | default: col.url
+              assign attrs = blk.shopify_attributes
+              assign tint = blk.settings.tint
+              assign btn = blk.settings.button_label
+            else
+              assign col = picked[idx]
+              assign title = col.title
+              assign label = ''
+              assign img = blank
+              assign href = col.url
+              assign attrs = ''
+              assign tint = blank
+              assign btn = section.settings.button_label
+            endif
+
+            comment
+              Three chances at a picture: the block's override, the
+              collection's own image, then its first product's photo.
+            endcomment
+            comment
+              col is nil when the block points at a collection that does not
+              exist on this shop. Every lookup below then yields nil rather
+              than erroring, so the card still renders -- with the label and
+              tint it was given -- instead of silently disappearing.
+            endcomment
+            if img == blank
+              assign img = col.image
+            endif
+            if img == blank
+              assign img = col.products.first.featured_image
+            endif
+
+            comment
+              Cycle the defaults so adjacent panels never share a tint.
+            endcomment
+            if tint == blank
+              assign t_i = idx | modulo: tints.size
+              assign tint = tints[t_i] | strip
+            endif
+
+            comment
+              Legibility is computed, not configured, and it is measured
+              rather than guessed. A brightness threshold has a dead zone
+              either side of it: a mid gold like #8a6f3f reads as "dark
+              enough" for cream type but only reaches 4.25:1 with it.
+
+              Asking for the actual contrast ratio against both candidates
+              and taking the higher one has no dead zone.
+            endcomment
+            assign contrast_dark = tint | color_contrast: '#2f2b28'
+            assign contrast_light = tint | color_contrast: '#f6f2ea'
+            assign tone = 'dark'
+            if contrast_light > contrast_dark
+              assign tone = 'light'
+            endif
+
+            assign img_alt = title
+          -%}
+
+          {%- if is_empty or title != blank or img != blank -%}
+            <li class="sp-cats__item" style="--i: {{ idx }};" data-sp-reveal {{ attrs }}>
+              <a
+                class="sp-cats__card sp-cats__card--{{ tone }}"
+                href="{{ href | default: routes.all_products_collection_url }}"
+                style="--tint: {{ tint }};"
+              >
+                <span class="sp-cats__copy">
+                  {%- if label != blank -%}
+                    <span class="sp-cats__label">{{ label | escape }}</span>
+                  {%- endif -%}
+
+                  <span class="sp-cats__title">{{ title | escape }}</span>
+
+                  {%- if btn != blank -%}
+                    <span class="sp-cats__btn">
+                      {{ btn | escape }}
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                        <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  {%- endif -%}
+                </span>
+
+                <span class="sp-cats__media">
+                  {%- if img != blank -%}
+                    {{
+                      img
+                      | image_url: width: 900
+                      | image_tag:
+                        class: 'sp-cats__img',
+                        widths: '250, 400, 600, 900',
+                        sizes: '(min-width: 990px) 26vw, (min-width: 750px) 40vw, 60vw',
+                        loading: 'lazy',
+                        alt: img_alt
+                    }}
+                  {%- else -%}
+                    <span class="sp-cats__ph" aria-hidden="true"></span>
+                  {%- endif -%}
+                </span>
+              </a>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Categories",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Browse" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Shop by category" },
+    { "type": "text", "id": "text", "label": "Text" },
+    {
+      "type": "select",
+      "id": "align",
+      "label": "Heading alignment",
+      "options": [
+        { "value": "start", "label": "Left" },
+        { "value": "center", "label": "Centre" }
+      ],
+      "default": "start"
+    },
+    { "type": "header", "content": "Categories" },
+    { "type": "paragraph", "content": "Add Category blocks for full control of label, title, colour and image. Or pick a list below for a quick start. Blocks win where both are set." },
+    { "type": "collection_list", "id": "collection_list", "label": "Collections", "limit": 12 },
+    { "type": "text", "id": "button_label", "label": "Button label", "info": "Used by the collection list. Blocks set their own." },
+    { "type": "header", "content": "Panel colours" },
+    { "type": "text", "id": "default_tints", "label": "Default tints", "info": "Comma-separated hex values, cycled across panels that have no colour of their own.", "default": "#f0e9dd,#4a3f35,#c9a227,#5a4334,#e8dcc2,#6b5744" },
+    { "type": "paragraph", "content": "Text colour is measured against each panel colour and the more legible option wins, so any tint stays readable." },
+    { "type": "header", "content": "Images" },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image style",
+      "info": "Fill suits photographs. Cut-out suits products on a transparent background.",
+      "options": [
+        { "value": "fill", "label": "Fill the whole card" },
+        { "value": "cutout", "label": "Cut-out beside the text" }
+      ],
+      "default": "fill"
+    },
+    { "type": "range", "id": "scrim", "label": "Darken image", "info": "Used by Fill, to keep the text readable.", "min": 0, "max": 85, "step": 5, "unit": "%", "default": 55 },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "radius", "label": "Corner radius", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 18 },
+    { "type": "range", "id": "gap", "label": "Gap", "min": 4, "max": 40, "step": 2, "unit": "px", "default": 20 },
+    { "type": "header", "content": "Spacing" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        { "type": "collection", "id": "collection", "label": "Collection" },
+        { "type": "text", "id": "label", "label": "Small label", "info": "The parent group, e.g. Home & Living." },
+        { "type": "text", "id": "heading", "label": "Title", "info": "Overrides the collection title." },
+        { "type": "image_picker", "id": "image", "label": "Image", "info": "A cut-out on a transparent background works best." },
+        { "type": "color", "id": "tint", "label": "Panel colour" },
+        { "type": "text", "id": "button_label", "label": "Button label", "info": "Leave empty for no button." },
+        { "type": "url", "id": "link", "label": "Link", "info": "Overrides the collection link." }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Categories" }]
+}
+{% endschema %}

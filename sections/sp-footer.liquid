@@ -1,0 +1,442 @@
+{%- comment -%}
+  ============================================================
+  Footer
+  ============================================================
+
+  Brand column, menu columns, a rule, then a base bar carrying the things a
+  shop is obliged to show: locale, payment methods, policies, copyright.
+
+  The oversized wordmark at the foot is decorative and aria-hidden. It
+  carries no information a screen reader needs — the real shop name is in the
+  brand column above and in the copyright line — so it is hidden rather than
+  read out twice at an enormous size.
+
+  SHOPIFY PLUMBING — these are the parts that must not be reinvented:
+    linklists[...]                 merchant menus, edited in Navigation
+    {% form 'localization' %}      country and language, with country_code /
+                                   locale_code — the only way to switch
+    shop.enabled_payment_types     the real methods this shop accepts
+    shop.policies                  the merchant's own policy pages
+    powered_by_link                Shopify attribution
+
+  THE LOCALE SELECTS DO NOT AUTO-SUBMIT, and that is deliberate.
+
+  Submitting a native <select> on `change` is a keyboard trap: on Chrome and
+  Edge, arrow keys move the selection of a CLOSED select and fire `change` on
+  every keystroke. The page would navigate on the first press down, and every
+  option below the first would be unreachable without a mouse.
+
+  So the select and its confirm button share one pill instead — the same
+  "one continuous control" the newsletter field uses. It needs no JavaScript
+  at all, works identically with a mouse, a keyboard or a screen reader, and
+  is the shape Shopify's own no-script path uses.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-footer.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign s = section.settings
+  assign menus = section.blocks | where: 'type', 'menu'
+
+  comment
+    Shopify's own follow button. shop.features.follow_on_shop? is false
+    unless the shop actually has the feature, so this never renders a dead
+    control.
+  endcomment
+  assign show_follow = false
+  if s.enable_follow_on_shop and shop.features.follow_on_shop?
+    assign show_follow = true
+  endif
+
+  comment
+    Each account can be set on THIS section or, if the merchant already
+    filled them in for the whole theme, under Theme settings > Social
+    media. The section wins so the footer can be edited in one place,
+    and the theme setting is the fallback so an existing shop keeps its
+    links without re-entering them.
+  endcomment
+  assign sp_instagram = s.social_instagram | default: settings.social_instagram_link
+  assign sp_facebook = s.social_facebook | default: settings.social_facebook_link
+  assign sp_pinterest = s.social_pinterest | default: settings.social_pinterest_link
+  assign sp_youtube = s.social_youtube | default: settings.social_youtube_link
+  assign sp_tiktok = s.social_tiktok | default: settings.social_tiktok_link
+  assign sp_twitter = s.social_twitter | default: settings.social_twitter_link
+  assign sp_vimeo = s.social_vimeo | default: settings.social_vimeo_link
+  assign sp_tumblr = s.social_tumblr | default: settings.social_tumblr_link
+  assign sp_snapchat = s.social_snapchat | default: settings.social_snapchat_link
+
+  assign has_social = false
+  if sp_instagram != blank
+    assign has_social = true
+  elsif sp_facebook != blank
+    assign has_social = true
+  elsif sp_pinterest != blank
+    assign has_social = true
+  elsif sp_youtube != blank
+    assign has_social = true
+  elsif sp_tiktok != blank
+    assign has_social = true
+  elsif sp_twitter != blank
+    assign has_social = true
+  elsif sp_vimeo != blank
+    assign has_social = true
+  elsif sp_tumblr != blank
+    assign has_social = true
+  elsif sp_snapchat != blank
+    assign has_social = true
+  endif
+  assign wordmark = s.wordmark_text | default: shop.name
+
+  assign show_contact = false
+  if s.phone != blank or s.email != blank or s.address != blank
+    assign show_contact = true
+  endif
+-%}
+
+<footer
+  class="sp-ft"
+  style="--sp-ft-pad-t: {{ s.padding_top }}px; --sp-ft-pad-b: {{ s.padding_bottom }}px;"
+>
+  <div class="sp-ft__inner">
+    <div class="sp-ft__card">
+    <div class="sp-ft__top">
+      <div class="sp-ft__brand">
+        {%- if s.logo != blank -%}
+          {%- assign logo_alt = shop.name -%}
+          {{
+            s.logo
+            | image_url: width: 400
+            | image_tag: class: 'sp-ft__logo', widths: '120, 200, 300, 400', sizes: '180px', loading: 'lazy', alt: logo_alt
+          }}
+        {%- else -%}
+          <p class="sp-ft__mark">{{ shop.name }}</p>
+        {%- endif -%}
+
+        {%- if s.description != blank -%}
+          <p class="sp-ft__desc">{{ s.description | escape }}</p>
+        {%- endif -%}
+
+        {%- if s.show_social and has_social -%}
+          {%- if s.social_heading != blank -%}
+            <h2 class="sp-ft__eyebrow">{{ s.social_heading | escape }}</h2>
+          {%- endif -%}
+
+          <ul class="sp-ft__social" role="list">
+            {%- if sp_instagram != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_instagram }}"><span class="visually-hidden">Instagram</span>{%- render 'icon-instagram' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_facebook != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_facebook }}"><span class="visually-hidden">Facebook</span>{%- render 'icon-facebook' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_pinterest != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_pinterest }}"><span class="visually-hidden">Pinterest</span>{%- render 'icon-pinterest' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_youtube != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_youtube }}"><span class="visually-hidden">YouTube</span>{%- render 'icon-youtube' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_tiktok != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_tiktok }}"><span class="visually-hidden">TikTok</span>{%- render 'icon-tiktok' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_twitter != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_twitter }}"><span class="visually-hidden">X</span>{%- render 'icon-twitter' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_vimeo != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_vimeo }}"><span class="visually-hidden">Vimeo</span>{%- render 'icon-vimeo' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_tumblr != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_tumblr }}"><span class="visually-hidden">Tumblr</span>{%- render 'icon-tumblr' -%}</a></li>
+            {%- endif -%}
+            {%- if sp_snapchat != blank -%}
+              <li><a class="sp-ft__soc" href="{{ sp_snapchat }}"><span class="visually-hidden">Snapchat</span>{%- render 'icon-snapchat' -%}</a></li>
+            {%- endif -%}
+          </ul>
+        {%- endif -%}
+
+        {%- if show_follow -%}
+          <div class="sp-ft__shopfollow">{{ shop | login_button: action: 'follow' }}</div>
+        {%- endif -%}
+      </div>
+
+      {%- comment -%}
+        Each menu block is its OWN grid child rather than sitting inside a
+        nested wrapper. That is what lets every column head across the row
+        share one baseline: a nested grid would align only its own children
+        and drift against the contact column beside it.
+      {%- endcomment -%}
+      {%- for block in menus -%}
+        {%- assign list = linklists[block.settings.menu] -%}
+        {%- if list.links.size > 0 -%}
+          <nav class="sp-ft__col" {{ block.shopify_attributes }} aria-labelledby="FooterCol-{{ block.id }}">
+            <h2 class="sp-ft__col-head" id="FooterCol-{{ block.id }}">
+              {{ block.settings.heading | default: list.title | escape }}
+            </h2>
+            <ul class="sp-ft__links" role="list">
+              {%- for link in list.links -%}
+                <li>
+                  <a class="sp-ft__link" href="{{ link.url }}"{% if link.current %} aria-current="page"{% endif %}>
+                    {{- link.title | escape -}}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- comment -%}
+        Contact. Every value is a setting, so the theme invents no phone
+        number, inbox or address on behalf of the shop.
+
+        The phone is a real tel: link with separators stripped, because a
+        number that cannot be tapped on a phone is decoration. The address
+        is rich text so it can carry its own line breaks and a map link.
+      {%- endcomment -%}
+      {%- if show_contact -%}
+        <div class="sp-ft__contact">
+          {%- if s.contact_heading != blank -%}
+            <h2 class="sp-ft__col-head">{{ s.contact_heading | escape }}</h2>
+          {%- endif -%}
+
+          <ul class="sp-ft__facts" role="list">
+            {%- if s.phone != blank -%}
+              <li class="sp-ft__fact">
+                <span class="sp-ft__fact-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7 2 2 0 0 1 6.5 3.5Z" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="sp-ft__fact-copy">
+                  <span class="sp-ft__fact-label">{{ s.phone_label | escape }}</span>
+                  {%- assign tel = s.phone | remove: ' ' | remove: '-' | remove: '(' | remove: ')' -%}
+                  <a class="sp-ft__fact-value" href="tel:{{ tel }}">{{ s.phone | escape }}</a>
+                </span>
+              </li>
+            {%- endif -%}
+
+            {%- if s.email != blank -%}
+              <li class="sp-ft__fact">
+                <span class="sp-ft__fact-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <path d="m3.5 6.5 8.5 6 8.5-6" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="sp-ft__fact-copy">
+                  <span class="sp-ft__fact-label">{{ s.email_label | escape }}</span>
+                  <a class="sp-ft__fact-value" href="mailto:{{ s.email | escape }}">{{ s.email | escape }}</a>
+                </span>
+              </li>
+            {%- endif -%}
+
+            {%- if s.address != blank -%}
+              <li class="sp-ft__fact">
+                <span class="sp-ft__fact-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" stroke-linejoin="round"/>
+                    <circle cx="12" cy="10" r="2.4"/>
+                  </svg>
+                </span>
+                <span class="sp-ft__fact-copy">
+                  <span class="sp-ft__fact-label">{{ s.address_label | escape }}</span>
+                  <span class="sp-ft__fact-value sp-ft__fact-value--rte">{{ s.address }}</span>
+                </span>
+              </li>
+            {%- endif -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      {%- comment -%}
+        App blocks — trust badges, cookie consent, chat widgets. The stock
+        Dawn footer supports these and a replacement that does not would
+        quietly remove the merchant's ability to install them.
+
+        Their own region, not inside .sp-ft__menus: that grid is sized for
+        nav columns and is gated on menus.size, so an app-block-only footer
+        would render nothing. Counted first for the same reason .sp-ft__base
+        is gated — a wrapper that always has a child makes :empty useless,
+        and an empty region would draw its rule under nothing.
+      {%- endcomment -%}
+      {%- assign app_count = 0 -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == '@app' -%}
+          {%- assign app_count = app_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- if app_count > 0 -%}
+        <div class="sp-ft__apps">
+          {%- for block in section.blocks -%}
+            {%- if block.type == '@app' -%}
+              <div class="sp-ft__app" {{ block.shopify_attributes }}>{%- render block -%}</div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- liquid
+      assign show_country = false
+      if s.enable_country_selector and localization.available_countries.size > 1
+        assign show_country = true
+      endif
+
+      assign show_lang = false
+      if s.enable_language_selector and localization.available_languages.size > 1
+        assign show_lang = true
+      endif
+
+      assign show_pay = false
+      if s.payment_enable and shop.enabled_payment_types.size > 0
+        assign show_pay = true
+      endif
+    -%}
+
+    {%- comment -%}
+      Gated as a whole. Rendering the bar and letting CSS hide it when empty
+      cannot work — .sp-ft__base always has a child, so :empty never matches
+      and an all-off footer would draw a rule under nothing.
+    {%- endcomment -%}
+    {%- if show_country or show_lang or show_pay -%}
+    <div class="sp-ft__base">
+      <div class="sp-ft__base-left">
+        {%- if show_country -%}
+          {%- form 'localization', id: 'FooterCountryForm', class: 'sp-ft__loc' -%}
+            <label class="visually-hidden" for="FooterCountry-{{ section.id }}">
+              {{- 'localization.country_label' | t -}}
+            </label>
+            <select id="FooterCountry-{{ section.id }}" class="sp-ft__select" name="country_code">
+              {%- for country in localization.available_countries -%}
+                <option value="{{ country.iso_code }}" {% if country.iso_code == localization.country.iso_code %}selected{% endif %}>
+                  {{ country.name }} ({{ country.currency.iso_code }} {{ country.currency.symbol }})
+                </option>
+              {%- endfor -%}
+            </select>
+            <button type="submit" class="sp-ft__loc-go">
+              <span class="visually-hidden">{{ 'localization.update_country' | t }}</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          {%- endform -%}
+        {%- endif -%}
+
+        {%- if show_lang -%}
+          {%- form 'localization', id: 'FooterLangForm', class: 'sp-ft__loc' -%}
+            <label class="visually-hidden" for="FooterLang-{{ section.id }}">
+              {{- 'localization.language_label' | t -}}
+            </label>
+            <select id="FooterLang-{{ section.id }}" class="sp-ft__select" name="locale_code">
+              {%- for language in localization.available_languages -%}
+                <option value="{{ language.iso_code }}" lang="{{ language.iso_code }}" {% if language.iso_code == localization.language.iso_code %}selected{% endif %}>
+                  {{ language.endonym_name | capitalize }}
+                </option>
+              {%- endfor -%}
+            </select>
+            <button type="submit" class="sp-ft__loc-go">
+              <span class="visually-hidden">{{ 'localization.update_language' | t }}</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          {%- endform -%}
+        {%- endif -%}
+      </div>
+
+      {%- if show_pay -%}
+        <div class="sp-ft__pay">
+          <h2 class="visually-hidden">{{ 'sections.footer.payment' | t }}</h2>
+          <ul class="sp-ft__pay-list" role="list">
+            {%- for type in shop.enabled_payment_types -%}
+              <li class="sp-ft__pay-item">{{ type | payment_type_svg_tag: class: 'sp-ft__pay-icon' }}</li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+    </div>
+    {%- endif -%}
+
+    <div class="sp-ft__legal">
+      <p class="sp-ft__copy">
+        &copy; {{ 'now' | date: '%Y' }} {{ shop.name }}
+        {{ powered_by_link }}
+      </p>
+
+      {%- if shop.policies.size > 0 -%}
+        <ul class="sp-ft__policies" role="list">
+          {%- for policy in shop.policies -%}
+            <li><a class="sp-ft__policy" href="{{ policy.url }}">{{ policy.title | escape }}</a></li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+
+    </div>
+  </div>
+
+  {%- comment -%}
+    Sits OUTSIDE the card and is clipped by the footer's own bottom edge, so
+    the card appears to rest on top of it. Decorative only — the shop name is
+    already in the brand column and the copyright line, so this is hidden
+    from assistive technology rather than announced a third time at display
+    size.
+  {%- endcomment -%}
+  {%- if s.show_wordmark and wordmark != blank -%}
+    <p class="sp-ft__giant" aria-hidden="true">{{ wordmark | escape }}</p>
+  {%- endif -%}
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    { "type": "header", "content": "Brand" },
+    { "type": "image_picker", "id": "logo", "label": "Logo", "info": "Leave empty to use the shop name as text." },
+    { "type": "text", "id": "description", "label": "Description", "default": "Made-to-order sofas and armchairs, built in one workshop in Britain." },
+    { "type": "checkbox", "id": "show_social", "label": "Show social links", "info": "Add the accounts below.", "default": true },
+    { "type": "text", "id": "social_heading", "label": "Follow heading", "default": "Follow us" },
+    { "type": "header", "content": "Social links", "info": "Leave any blank to hide that icon. Blank fields fall back to Theme settings \u2192 Social media." },
+    { "type": "text", "id": "social_instagram", "label": "Instagram", "info": "https://instagram.com/yourshop" },
+    { "type": "text", "id": "social_facebook", "label": "Facebook", "info": "https://facebook.com/yourshop" },
+    { "type": "text", "id": "social_pinterest", "label": "Pinterest", "info": "https://pinterest.com/yourshop" },
+    { "type": "text", "id": "social_youtube", "label": "YouTube", "info": "https://youtube.com/@yourshop" },
+    { "type": "text", "id": "social_tiktok", "label": "TikTok", "info": "https://tiktok.com/@yourshop" },
+    { "type": "text", "id": "social_twitter", "label": "X", "info": "https://x.com/yourshop" },
+    { "type": "text", "id": "social_vimeo", "label": "Vimeo", "info": "https://vimeo.com/yourshop" },
+    { "type": "text", "id": "social_tumblr", "label": "Tumblr", "info": "https://yourshop.tumblr.com" },
+    { "type": "text", "id": "social_snapchat", "label": "Snapchat", "info": "https://snapchat.com/add/yourshop" },
+    { "type": "header", "content": "Contact" },
+    { "type": "text", "id": "contact_heading", "label": "Heading", "default": "Contact us" },
+    { "type": "text", "id": "phone_label", "label": "Phone label", "default": "Phone" },
+    { "type": "text", "id": "phone", "label": "Phone number" },
+    { "type": "text", "id": "email_label", "label": "Email label", "default": "Email" },
+    { "type": "text", "id": "email", "label": "Email address" },
+    { "type": "text", "id": "address_label", "label": "Address label", "default": "Address" },
+    { "type": "richtext", "id": "address", "label": "Address" },
+    { "type": "header", "content": "Base bar" },
+    { "type": "checkbox", "id": "enable_country_selector", "label": "Show country and region", "default": false },
+    { "type": "checkbox", "id": "enable_language_selector", "label": "Show language", "default": false },
+    { "type": "checkbox", "id": "payment_enable", "label": "Show payment methods", "default": true },
+    { "type": "checkbox", "id": "enable_follow_on_shop", "label": "Show Follow on Shop", "info": "Only appears if the shop has the feature.", "default": true },
+    { "type": "header", "content": "Wordmark" },
+    { "type": "checkbox", "id": "show_wordmark", "label": "Show the large wordmark", "default": true },
+    { "type": "text", "id": "wordmark_text", "label": "Wordmark text", "info": "Leave empty to use the shop name." },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "Space under the card", "info": "How much of the wordmark shows beneath it.", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 32 }
+  ],
+  "blocks": [
+    { "type": "@app" },
+    {
+      "type": "menu",
+      "name": "Menu",
+      "limit": 4,
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Shop" },
+        { "type": "link_list", "id": "menu", "label": "Menu", "default": "footer" }
+      ]
+    }
+  ]
+}
+{% endschema %}

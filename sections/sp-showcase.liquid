@@ -1,0 +1,264 @@
+{%- comment -%}
+  ============================================================
+  In real life — alternating detail rows
+  ============================================================
+
+  A photograph and a piece of copy per row, sides swapping as you go down.
+  The alternation is the whole point: three identical image-left rows read
+  as a list, and the same three alternating read as a walk around the piece.
+
+  Rows carry an optional numbered eyebrow so a set of details reads in
+  order. Everything is a block the merchant writes.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-blocks.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign rows = section.blocks | where: 'type', 'row'
+-%}
+
+{%- if rows.size > 0 -%}
+  <section
+    class="sp-sc sp-sc--{{ s.scheme }}"
+    style="--sp-sc-pad-t: {{ s.padding_top }}px; --sp-sc-pad-b: {{ s.padding_bottom }}px; --sp-sc-ratio: {{ s.image_ratio }};"
+  >
+    <div class="sp-sc__inner">
+      {%- if s.eyebrow != blank or s.heading != blank -%}
+        <header class="sp-sc__head" data-sp-reveal>
+          {%- if s.eyebrow != blank -%}
+            <p class="sp-sc__eyebrow">{{ s.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if s.heading != blank -%}
+            <h2 class="sp-sc__heading">{{ s.heading | escape }}</h2>
+          {%- endif -%}
+          {%- if s.text != blank -%}
+            <p class="sp-sc__intro">{{ s.text | escape }}</p>
+          {%- endif -%}
+        </header>
+      {%- endif -%}
+
+      <div class="sp-sc__rows">
+        {%- for block in rows -%}
+          {%- liquid
+            comment
+              Odd rows put the picture left, even rows right. Driven by the
+              loop rather than a per-block setting, so a merchant reordering
+              blocks cannot end up with two pictures on the same side.
+            endcomment
+            assign flip = false
+            assign m = forloop.index | modulo: 2
+            if m == 0
+              assign flip = true
+            endif
+          -%}
+          <article
+            class="sp-sc__row{% if flip %} sp-sc__row--flip{% endif %}"
+            data-sp-reveal
+            {{ block.shopify_attributes }}
+          >
+            <div class="sp-sc__media">
+              {%- if block.settings.image != blank -%}
+                {%- assign r_alt = block.settings.image_alt -%}
+                {{
+                  block.settings.image
+                  | image_url: width: 1400
+                  | image_tag: class: 'sp-sc__img', widths: '400, 700, 1000, 1400', sizes: '(min-width: 990px) 48vw, 92vw', loading: 'lazy', alt: r_alt
+                }}
+              {%- else -%}
+                {{ 'image' | placeholder_svg_tag: 'sp-sc__img sp-sc__img--ph' }}
+              {%- endif -%}
+            </div>
+
+            <div class="sp-sc__copy">
+              {%- if s.number_rows -%}
+                <span class="sp-sc__num" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              {%- endif -%}
+
+              {%- if block.settings.title != blank -%}
+                <h3 class="sp-sc__title">{{ block.settings.title | escape }}</h3>
+              {%- endif -%}
+
+              {%- if block.settings.text != blank -%}
+                <div class="sp-sc__text rte">{{ block.settings.text }}</div>
+              {%- endif -%}
+
+              {%- if block.settings.link_label != blank and block.settings.link != blank -%}
+                <a class="sp-sc__link" href="{{ block.settings.link }}">
+                  {{ block.settings.link_label | escape }}
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              {%- endif -%}
+            </div>
+          </article>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "In real life",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "In real life"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "The details you sit with"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Text"
+    },
+    {
+      "type": "checkbox",
+      "id": "number_rows",
+      "label": "Number the rows",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Full image (no crop)"
+        },
+        {
+          "value": "4 / 3",
+          "label": "Landscape"
+        },
+        {
+          "value": "1 / 1",
+          "label": "Square"
+        },
+        {
+          "value": "3 / 2",
+          "label": "Wide"
+        }
+      ],
+      "default": "auto",
+      "info": "Full image shows every pixel and lets each row set its own height. A fixed shape crops nothing either — it letterboxes."
+    },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Background",
+      "options": [
+        {
+          "value": "ground",
+          "label": "White"
+        },
+        {
+          "value": "raised",
+          "label": "Warm off-white"
+        }
+      ],
+      "default": "ground"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 88
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 88
+    }
+  ],
+  "blocks": [
+    {
+      "type": "row",
+      "name": "Detail",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "Image alt text"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Hand-tied springs"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Eight knots to each spring, laid by eye. It is the reason the seat holds its shape after a decade rather than a season.</p>"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link text"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "In real life",
+      "blocks": [
+        {
+          "type": "row",
+          "settings": {
+            "title": "Hand-tied springs",
+            "text": "<p>Eight knots to each spring, laid by eye. It is the reason the seat holds its shape after a decade rather than a season.</p>"
+          }
+        },
+        {
+          "type": "row",
+          "settings": {
+            "title": "A frame that is jointed, not stapled",
+            "text": "<p>Beech, kiln-dried for eleven weeks, then glued and screwed at every joint.</p>"
+          }
+        },
+        {
+          "type": "row",
+          "settings": {
+            "title": "Covers you can take off",
+            "text": "<p>Every cover unzips, so a spill is a wash rather than a replacement.</p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

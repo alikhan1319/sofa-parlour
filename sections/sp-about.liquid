@@ -1,0 +1,227 @@
+{%- comment -%}
+  ============================================================
+  About — the workshop portrait
+  ============================================================
+
+  Image on one side, the story on the other. What keeps it from being a
+  stock two-column band is the frame: a brass hairline offset behind the
+  photograph, so the image sits slightly proud of its own outline. It is a
+  picture-framing device, which is the right vernacular for a furniture
+  maker talking about itself.
+
+  DIFFERENT FROM sp-split ON PURPOSE. That section bleeds its image off the
+  viewport edge and lists selling points. This one contains the image, frames
+  it, and carries facts — the things a shopper checks before trusting a
+  £2,000 sofa: how long you have existed, where you build, what you guarantee.
+
+  Facts are blocks so the merchant writes their own. Nothing here invents a
+  founding date, a guarantee or a number on the shop's behalf.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-about.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign steps = section.blocks | where: 'type', 'step'
+-%}
+
+<section
+  class="sp-ab sp-ab--{{ s.media_side }} sp-ab--{{ s.scheme }}"
+  style="--sp-ab-pad-t: {{ s.padding_top }}px; --sp-ab-pad-b: {{ s.padding_bottom }}px; --sp-ab-ratio: {{ s.image_ratio }};"
+  data-sp-reveal
+>
+  <div class="sp-ab__inner">
+    <figure class="sp-ab__media">
+      <div class="sp-ab__stack">
+        <div class="sp-ab__frame" aria-hidden="true"></div>
+
+        <div class="sp-ab__shot sp-ab__shot--main">
+          {%- if s.image != blank -%}
+            {{
+              s.image
+              | image_url: width: 1400
+              | image_tag:
+                class: 'sp-ab__img',
+                widths: '400, 600, 900, 1200, 1400',
+                sizes: '(min-width: 990px) 38vw, 74vw',
+                loading: 'lazy',
+                alt: s.image_alt
+            }}
+          {%- else -%}
+            {{ 'image' | placeholder_svg_tag: 'sp-ab__img sp-ab__img--ph' }}
+          {%- endif -%}
+        </div>
+
+        {%- comment -%}
+          The second photograph is what turns a picture into a composition:
+          one wide view of the room, one close view of the work. It overlaps
+          the main image rather than sitting beside it, so the two read as a
+          single object. Optional — a merchant with one good photograph is
+          better off showing it alone than padding the layout out.
+        {%- endcomment -%}
+        {%- if s.image_detail != blank -%}
+          <div class="sp-ab__shot sp-ab__shot--inset">
+            {{
+              s.image_detail
+              | image_url: width: 800
+              | image_tag:
+                class: 'sp-ab__img',
+                widths: '240, 400, 600, 800',
+                sizes: '(min-width: 990px) 20vw, 40vw',
+                loading: 'lazy',
+                alt: s.image_detail_alt
+            }}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- if s.caption != blank -%}
+        <figcaption class="sp-ab__caption">{{ s.caption | escape }}</figcaption>
+      {%- endif -%}
+    </figure>
+
+    <div class="sp-ab__copy">
+      {%- if s.eyebrow != blank -%}
+        <p class="sp-ab__eyebrow">{{ s.eyebrow | escape }}</p>
+      {%- endif -%}
+
+      {%- if s.heading != blank -%}
+        <h2 class="sp-ab__heading">{{ s.heading | escape }}</h2>
+      {%- endif -%}
+
+      {%- if s.text != blank -%}
+        <div class="sp-ab__text rte">{{ s.text }}</div>
+      {%- endif -%}
+
+      {%- comment -%}
+        An ordered list, numbered, because this genuinely IS a sequence — a
+        frame is built before it is sprung, and sprung before it is covered.
+        Numbering something that is not a sequence is decoration; numbering
+        this one carries information the reader needs.
+      {%- endcomment -%}
+      {%- if steps.size > 0 -%}
+        <ol class="sp-ab__steps">
+          {%- for block in steps -%}
+            <li class="sp-ab__step" {{ block.shopify_attributes }}>
+              <span class="sp-ab__step-num" aria-hidden="true">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <div class="sp-ab__step-copy">
+                {%- if block.settings.title != blank -%}
+                  <h3 class="sp-ab__step-title">{{ block.settings.title | escape }}</h3>
+                {%- endif -%}
+                {%- if block.settings.text != blank -%}
+                  <p class="sp-ab__step-text">{{ block.settings.text | escape }}</p>
+                {%- endif -%}
+              </div>
+            </li>
+          {%- endfor -%}
+        </ol>
+      {%- endif -%}
+
+      {%- if s.signature != blank or s.signature_role != blank -%}
+        <p class="sp-ab__sign">
+          {%- if s.signature != blank -%}
+            <span class="sp-ab__sign-name">{{ s.signature | escape }}</span>
+          {%- endif -%}
+          {%- if s.signature_role != blank -%}
+            <span class="sp-ab__sign-role">{{ s.signature_role | escape }}</span>
+          {%- endif -%}
+        </p>
+      {%- endif -%}
+
+      {%- comment -%}
+        Both the label AND the link are required. An <a> with no href is not
+        focusable and not clickable — it would look like a button and do
+        nothing, which is worse than showing no button at all.
+      {%- endcomment -%}
+      {%- if s.button_label != blank and s.button_link != blank -%}
+        <a class="sp-ab__cta" href="{{ s.button_link }}">
+          {{ s.button_label | escape }}
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Our story" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Built in one workshop, by people who sit on them" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Every frame is cut, joined and upholstered under one roof. We buy hardwood from mills we have used for years, and we still make the first of every new design by hand before it goes anywhere near a production run.</p>" },
+    { "type": "header", "content": "Image" },
+    { "type": "image_picker", "id": "image", "label": "Main image" },
+    { "type": "text", "id": "image_alt", "label": "Main image alt text", "info": "Describe the photograph for screen readers and for when the image fails to load." },
+    { "type": "image_picker", "id": "image_detail", "label": "Inset detail image", "info": "Optional. A close-up sits over the corner of the main image." },
+    { "type": "text", "id": "image_detail_alt", "label": "Inset image alt text" },
+    { "type": "text", "id": "caption", "label": "Caption", "info": "Sits under the images. Name the room, the piece, or the person." },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        { "value": "4 / 5", "label": "Portrait" },
+        { "value": "1 / 1", "label": "Square" },
+        { "value": "4 / 3", "label": "Landscape" }
+      ],
+      "default": "4 / 5"
+    },
+    {
+      "type": "select",
+      "id": "media_side",
+      "label": "Image side",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    { "type": "header", "content": "Signature" },
+    { "type": "text", "id": "signature", "label": "Name" },
+    { "type": "text", "id": "signature_role", "label": "Role" },
+    { "type": "header", "content": "Button" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "More about us" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "scheme",
+      "label": "Background",
+      "options": [
+        { "value": "ground", "label": "Espresso" },
+        { "value": "raised", "label": "Raised" }
+      ],
+      "default": "ground"
+    },
+    { "type": "range", "id": "padding_top", "label": "Padding top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 },
+    { "type": "range", "id": "padding_bottom", "label": "Padding bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 96 }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "limit": 5,
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "The frame" },
+        { "type": "text", "id": "text", "label": "Text", "default": "Beech, kiln-dried and jointed by hand." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "About",
+      "blocks": [
+        { "type": "step", "settings": { "title": "The frame", "text": "Beech, kiln-dried for eleven weeks, then jointed and glued by hand." } },
+        { "type": "step", "settings": { "title": "The suspension", "text": "Serpentine springs laid by eye and tied off one at a time." } },
+        { "type": "step", "settings": { "title": "The cover", "text": "Cut on the roll, fitted on the frame, stitched in place." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

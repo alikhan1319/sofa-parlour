@@ -1,0 +1,597 @@
+/* ============================================================
+   Sofa Parlour — Features, In real life, Questions
+   ============================================================
+
+   Three sections in one stylesheet because they share a palette, a radius
+   and a rhythm, and splitting them would mean maintaining that agreement in
+   three places. They are also almost always used together.
+
+   Near-sharp corners, hairline borders, no shadows — the same treatment the
+   product page uses, so a shopper scrolling from the buy box into these
+   does not cross a visual seam.
+
+   Hedvig Letters Sans ships ONE weight and font-synthesis-weight is none, so
+   font-weight is inert. Hierarchy is size, colour and letter-spacing.
+   ============================================================ */
+
+.sp-fx,
+.sp-sc,
+.sp-fq,
+.sp-ph,
+.sp-tm {
+  --b-ground: #ffffff;
+  --b-raised: #f6f3ee;
+
+  --b-ink: #1f1a16;                     /* 17.25 : 1 on white */
+  --b-ink-2: rgba(31, 26, 22, 0.72);    /*  6.83 : 1 */
+  --b-ink-3: rgba(31, 26, 22, 0.62);    /*  4.85 : 1 — still AA */
+
+  --b-line: rgba(31, 26, 22, 0.12);
+  --b-edge: rgba(31, 26, 22, 0.60);     /*  4.51 : 1 — control boundaries */
+  --b-accent: #9a5d06;                  /*  5.33 : 1 — carries text */
+
+  --b-r: 0.4rem;
+  --b-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --b-fast: 160ms;
+  --b-base: 280ms;
+  --b-slow: 620ms;
+
+  --b-gut: clamp(1.6rem, 4vw, 4.8rem);
+
+  color: var(--b-ink);
+}
+
+.sp-fx--ground, .sp-sc--ground, .sp-fq--ground,
+.sp-ph--ground, .sp-tm--ground { background-color: var(--b-ground); }
+
+.sp-fx--raised, .sp-sc--raised, .sp-fq--raised,
+.sp-ph--raised, .sp-tm--raised { background-color: var(--b-raised); }
+
+.sp-fx__inner,
+.sp-sc__inner,
+.sp-fq__inner,
+.sp-ph__inner,
+.sp-tm__inner {
+  max-width: 132rem;
+  margin: 0 auto;
+  padding: 0 var(--b-gut);
+}
+
+/* ============================================================
+   Features
+   ============================================================ */
+
+.sp-fx { padding: var(--sp-fx-pad-t, 56px) 0 var(--sp-fx-pad-b, 56px); }
+
+.sp-fx__heading {
+  margin: 0 0 clamp(2rem, 3vw, 3.2rem);
+  font-family: inherit;
+  font-size: clamp(1.9rem, 2.4vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/*  auto-fit, so three features fill the width and five wrap instead of
+    shrinking into columns too narrow to read. */
+.sp-fx__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: clamp(1.6rem, 2.4vw, 3.2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-fx__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+.sp-fx__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid var(--b-line);
+  border-radius: var(--b-r);
+  color: var(--b-accent);
+}
+
+.sp-fx__copy { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+
+.sp-fx__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.4rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--b-ink);
+}
+
+.sp-fx__text {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.55;
+  color: var(--b-ink-3);
+}
+
+/* ============================================================
+   In real life
+   ============================================================ */
+
+.sp-sc { padding: var(--sp-sc-pad-t, 88px) 0 var(--sp-sc-pad-b, 88px); }
+
+.sp-sc__head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-width: 62ch;
+  margin-bottom: clamp(3.2rem, 5vw, 5.6rem);
+}
+
+.sp-sc__eyebrow,
+.sp-fq__eyebrow,
+.sp-ph__eyebrow,
+.sp-tm__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--b-ink-3);
+}
+
+.sp-sc__eyebrow::before,
+.sp-fq__eyebrow::before,
+.sp-ph__eyebrow::before,
+.sp-tm__eyebrow::before {
+  content: '';
+  width: 3.2rem;
+  height: 1px;
+  background-color: var(--b-accent);
+}
+
+.sp-sc__heading,
+.sp-fq__heading,
+.sp-tm__heading {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(2.4rem, 3.4vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.sp-sc__intro,
+.sp-fq__intro,
+.sp-tm__intro {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.1vw, 1.55rem);
+  line-height: 1.7;
+  color: var(--b-ink-2);
+}
+
+.sp-sc__rows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3.2rem, 6vw, 7.2rem);
+}
+
+.sp-sc__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.8rem, 3vw, 4rem);
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .sp-sc__row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+  /*  Order, not column definitions: swapping tracks would also swap their
+      widths, and both sides are meant to stay equal. */
+  .sp-sc__row--flip .sp-sc__media { order: 2; }
+  .sp-sc__row--flip .sp-sc__copy { order: 1; }
+}
+
+/*  No fixed aspect ratio by default.
+
+    A ratio plus object-fit: cover is a crop: the box decides the shape and
+    the photograph is trimmed to fit it. For a detail shot — a spring, a
+    joint, a zip — the part that gets trimmed is usually the part worth
+    showing.
+
+    With `auto` the image sets its own height and every pixel of it is on
+    the page. A fixed ratio is still selectable where a row of matching
+    shapes matters more than the whole frame. */
+.sp-sc__media {
+  overflow: hidden;
+  border-radius: var(--b-r);
+  background-color: var(--b-raised);
+  aspect-ratio: var(--sp-sc-ratio, auto);
+}
+
+.sp-sc--raised .sp-sc__media { background-color: var(--b-ground); }
+
+.sp-sc__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*  Only when the merchant has chosen a fixed shape does the image need to
+    fill it — and then `contain` keeps the whole picture, letterboxed
+    against the mount rather than cropped. */
+.sp-sc__media:not([style*='auto']) .sp-sc__img {
+  height: 100%;
+  object-fit: contain;
+}
+
+.sp-sc__img--ph { background-color: rgba(31, 26, 22, 0.06); }
+
+.sp-sc__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/*  The number is information, not ornament: these details are read in order,
+    and the figure is what ties a row to its place in that order. */
+.sp-sc__num {
+  font-size: 1.15rem;
+  letter-spacing: 0.16em;
+  color: var(--b-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-sc__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(1.8rem, 2.2vw, 2.4rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.sp-sc__text {
+  max-width: 52ch;
+  font-size: 1.4rem;
+  line-height: 1.7;
+  color: var(--b-ink-2);
+}
+
+.sp-sc__text > * { margin: 0; }
+.sp-sc__text > * + * { margin-top: 1rem; }
+
+.sp-sc__link,
+.sp-fq__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.4rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  color: var(--b-accent);
+  text-decoration: none;
+}
+
+.sp-sc__link svg,
+.sp-fq__link svg {
+  flex: 0 0 auto;
+  transition: transform var(--b-base) var(--b-ease);
+}
+
+.sp-sc__link:hover svg,
+.sp-fq__link:hover svg { transform: translateX(3px); }
+
+/* ============================================================
+   Questions
+   ============================================================ */
+
+.sp-fq { padding: var(--sp-fq-pad-t, 88px) 0 var(--sp-fq-pad-b, 88px); }
+
+.sp-fq__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.4rem, 4vw, 5.6rem);
+}
+
+@media (min-width: 900px) {
+  .sp-fq__inner {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+  }
+}
+
+.sp-fq__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+.sp-fq__list {
+  min-width: 0;
+  border-top: 1px solid var(--b-line);
+}
+
+.sp-fq__item { border-bottom: 1px solid var(--b-line); }
+
+.sp-fq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+  padding: 1.8rem 0;
+  font-size: clamp(1.4rem, 1.4vw, 1.6rem);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--b-ink);
+  cursor: pointer;
+  list-style: none;
+  transition: color var(--b-fast) var(--b-ease);
+}
+
+.sp-fq__q::-webkit-details-marker { display: none; }
+.sp-fq__q:hover { color: var(--b-accent); }
+
+.sp-fq__q svg {
+  flex: 0 0 auto;
+  color: var(--b-ink-3);
+  transition: transform var(--b-base) var(--b-ease);
+}
+
+/*  The plus becomes a cross by rotation, so one glyph carries both states. */
+.sp-fq__item[open] .sp-fq__q svg { transform: rotate(135deg); }
+
+.sp-fq__a {
+  max-width: 62ch;
+  padding: 0 0 2rem;
+  font-size: 1.35rem;
+  line-height: 1.75;
+  color: var(--b-ink-2);
+}
+
+.sp-fq__a > * { margin: 0; }
+.sp-fq__a > * + * { margin-top: 1rem; }
+.sp-fq__a a { color: var(--b-ink); text-underline-offset: 0.3em; }
+.sp-fq__a a:hover { color: var(--b-accent); }
+
+/* ============================================================
+   Focus
+   ============================================================ */
+
+.sp-fx a:focus-visible,
+.sp-sc a:focus-visible,
+.sp-fq a:focus-visible,
+.sp-fq summary:focus-visible {
+  outline: 2px solid var(--b-accent);
+  outline-offset: 3px;
+}
+
+/* ============================================================
+   Reveal
+   ============================================================
+   Gated on html.js, which layout/theme.liquid swaps in for no-js. Without
+   that gate a browser that never runs the reveal script would be left
+   looking at empty sections.
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js .sp-fx[data-sp-reveal],
+  html.js .sp-fq[data-sp-reveal],
+  html.js .sp-sc [data-sp-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--b-slow) var(--b-ease),
+                transform var(--b-slow) var(--b-ease);
+  }
+
+  html.js .sp-fx[data-sp-reveal].is-in,
+  html.js .sp-fq[data-sp-reveal].is-in,
+  html.js .sp-sc [data-sp-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-sc__link svg,
+  .sp-fq__link svg,
+  .sp-fq__q,
+  .sp-fq__q svg { transition: none; }
+}
+
+/* ============================================================
+   Page hero
+   ============================================================ */
+
+.sp-ph { padding: var(--sp-ph-pad-t, 72px) 0 var(--sp-ph-pad-b, 24px); }
+
+.sp-ph__head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  max-width: 68ch;
+  margin-bottom: clamp(2.4rem, 4vw, 4rem);
+}
+
+/*  The largest type on the page, and the only place in the theme set this
+    big. With one font weight available, size is the whole hierarchy. */
+.sp-ph__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(3.2rem, 6vw, 6.4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  color: var(--b-ink);
+}
+
+.sp-ph__intro {
+  max-width: 58ch;
+  font-size: clamp(1.45rem, 1.3vw, 1.7rem);
+  line-height: 1.7;
+  color: var(--b-ink-2);
+}
+
+.sp-ph__intro > * { margin: 0; }
+.sp-ph__intro > * + * { margin-top: 1rem; }
+
+.sp-ph__media {
+  overflow: hidden;
+  border-radius: var(--b-r);
+  background-color: var(--b-raised);
+  aspect-ratio: var(--sp-ph-ratio, 16 / 9);
+}
+
+.sp-ph--raised .sp-ph__media { background-color: var(--b-ground); }
+
+.sp-ph__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*  With no fixed shape the photograph sets its own height, so nothing of it
+    is cropped — the same choice the detail rows make. */
+.sp-ph__media[style*='auto'] {
+  aspect-ratio: auto;
+}
+
+.sp-ph__media[style*='auto'] .sp-ph__img {
+  height: auto;
+}
+
+/* ============================================================
+   The people
+   ============================================================ */
+
+.sp-tm { padding: var(--sp-tm-pad-t, 88px) 0 var(--sp-tm-pad-b, 88px); }
+
+.sp-tm__head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-width: 62ch;
+  margin-bottom: clamp(2.8rem, 4vw, 4.8rem);
+}
+
+.sp-tm__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.6rem, 2.4vw, 3.2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 750px) {
+  .sp-tm__grid {
+    grid-template-columns: repeat(min(var(--sp-tm-cols, 4), 3), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .sp-tm__grid {
+    grid-template-columns: repeat(var(--sp-tm-cols, 4), minmax(0, 1fr));
+  }
+}
+
+.sp-tm__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+.sp-tm__shot {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--b-r);
+  background-color: var(--b-raised);
+  aspect-ratio: var(--sp-tm-ratio, 4 / 5);
+}
+
+.sp-tm--raised .sp-tm__shot { background-color: var(--b-ground); }
+
+.sp-tm__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*  The stand-in for a colleague who has not been photographed yet. Set
+    large and quiet — it should read as a placeholder, not as a monogram
+    competing with the names beside it. */
+.sp-tm__initials {
+  font-size: clamp(2.4rem, 3vw, 3.6rem);
+  letter-spacing: 0.06em;
+  color: rgba(31, 26, 22, 0.28);
+}
+
+.sp-tm__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.sp-tm__name {
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--b-ink);
+}
+
+.sp-tm__role {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--b-ink-3);
+}
+
+.sp-tm__text {
+  margin: 0.3rem 0 0;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--b-ink-2);
+}
+
+/* ============================================================
+   Reveal for the two additions
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js .sp-ph[data-sp-reveal],
+  html.js .sp-tm [data-sp-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--b-slow) var(--b-ease),
+                transform var(--b-slow) var(--b-ease);
+  }
+
+  html.js .sp-ph[data-sp-reveal].is-in,
+  html.js .sp-tm [data-sp-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  html.js .sp-tm .sp-tm__item.is-in:nth-child(2) { transition-delay: 70ms; }
+  html.js .sp-tm .sp-tm__item.is-in:nth-child(3) { transition-delay: 140ms; }
+  html.js .sp-tm .sp-tm__item.is-in:nth-child(n + 4) { transition-delay: 210ms; }
+}

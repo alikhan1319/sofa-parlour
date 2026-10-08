@@ -1,0 +1,433 @@
+/* ============================================================
+   Quick view
+   ============================================================
+
+   Cream panel on a dark scrim: the modal is a lit surface lifted off the
+   page, which is what makes it read as a considered detail view rather than
+   an overlay pasted on top.
+
+   Image left, detail right, splitting at 900px. Below that the gallery
+   stacks above the detail and the buy row pins to the foot, because a modal
+   on a phone is a full-height sheet and the action has to stay reachable
+   without scrolling back.
+   ============================================================ */
+
+.sp-qv-modal {
+  --card: #ffffff;
+  --on-card: #1f1a16;
+  --muted: rgba(31, 26, 22, 0.62);
+  --line: rgba(31, 26, 22, 0.12);
+  --brass: #9a5d06;
+  --bronze: #9a5d06;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.8rem, 3vw, 3.2rem);
+}
+
+.sp-qv-modal[hidden] { display: none; }
+
+.sp-qv-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 12, 10, 0.62);
+  opacity: 0;
+  transition: opacity 260ms var(--ease);
+}
+
+.sp-qv-modal.is-open .sp-qv-modal__scrim { opacity: 1; }
+
+.sp-qv-modal__panel {
+  position: relative;
+  width: min(112rem, 100%);
+  max-height: min(84rem, 92vh);
+  overflow: hidden auto;
+  border-radius: 2rem;
+  background: var(--card);
+  color: var(--on-card);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(16px) scale(0.985);
+  transition: opacity 300ms var(--ease), transform 300ms var(--ease);
+}
+
+.sp-qv-modal.is-open .sp-qv-modal__panel { opacity: 1; transform: none; }
+
+.sp-qv-modal__close {
+  position: absolute;
+  z-index: 3;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(31, 26, 22, 0.06);
+  color: var(--on-card);
+  cursor: pointer;
+  transition: background 120ms var(--ease);
+}
+
+.sp-qv-modal__close:hover { background: rgba(31, 26, 22, 0.12); }
+
+.sp-qv-modal__loading {
+  display: grid;
+  place-items: center;
+  min-height: 32rem;
+  color: var(--muted);
+  font-size: 1.4rem;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+
+.sp-qv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+@media (min-width: 900px) {
+  .sp-qv { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+}
+
+/* --- Media --- */
+
+.sp-qv__media {
+  display: grid;
+  gap: 1.2rem;
+  padding: clamp(1.6rem, 2vw, 2.4rem);
+  background: rgba(31, 26, 22, 0.04);
+}
+
+.sp-qv__stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 1.4rem;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.sp-qv__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 260ms var(--ease), visibility 260ms;
+}
+
+.sp-qv__slide.is-active { opacity: 1; visibility: visible; }
+
+.sp-qv__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1.6rem;
+}
+
+.sp-qv__ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(150deg, rgba(31, 26, 22, 0.09), rgba(31, 26, 22, 0.03));
+}
+
+.sp-qv__thumbs {
+  display: flex;
+  gap: 0.8rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sp-qv__thumbs::-webkit-scrollbar { display: none; }
+
+.sp-qv__thumb {
+  flex: 0 0 auto;
+  width: 7.2rem;
+  height: 7.2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--card);
+  cursor: pointer;
+  transition: border-color 120ms var(--ease);
+}
+
+.sp-qv__thumb img { display: block; width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; }
+.sp-qv__thumb.is-active { border-color: var(--bronze); }
+
+/* --- Detail --- */
+
+.sp-qv__detail {
+  display: grid;
+  align-content: start;
+  gap: 1.4rem;
+  padding: clamp(2rem, 3vw, 3.6rem);
+  padding-right: clamp(2rem, 3vw, 4.8rem);
+}
+
+.sp-qv__type {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sp-qv__title {
+  margin: 0;
+  font-size: clamp(2.2rem, 2.6vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--on-card);
+}
+
+.sp-qv__rating { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 1.25rem; }
+.sp-qv__stars { position: relative; display: inline-block; font-size: 1.3rem; line-height: 1; letter-spacing: 0.1em; }
+.sp-qv__stars-track { color: rgba(31, 26, 22, 0.16); }
+
+.sp-qv__stars-fill {
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--bronze);
+}
+
+.sp-qv__muted { color: var(--muted); }
+
+.sp-qv__prices { display: flex; align-items: baseline; gap: 1rem; margin: 0; }
+
+.sp-qv__now {
+  font-size: clamp(2rem, 2.2vw, 2.6rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-qv__was {
+  font-size: 1.4rem;
+  color: rgba(31, 26, 22, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-qv__was[hidden] { display: none; }
+
+.sp-qv__blurb {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+/* --- Options --- */
+
+.sp-qv__options { display: grid; gap: 1.6rem; padding-top: 0.4rem; }
+.sp-qv__option { display: grid; gap: 0.8rem; }
+
+.sp-qv__option-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.sp-qv__option-name { letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.sp-qv__option-value { color: var(--on-card); }
+
+.sp-qv__values { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+
+.sp-qv__value {
+  min-height: 4rem;
+  padding: 0 1.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1.25rem;
+  color: var(--on-card);
+  cursor: pointer;
+  transition: border-color 120ms var(--ease), background 120ms var(--ease);
+}
+
+.sp-qv__value:hover { border-color: var(--bronze); }
+
+.sp-qv__value.is-active {
+  border-color: var(--on-card);
+  background: var(--on-card);
+  color: #fff;
+}
+
+/*  The colour swatch is the PRODUCT in that colour, not the colour's name.
+    A shopper buying a sofa is choosing how the piece looks in Moss Linen —
+    the word "Moss Linen" cannot answer that, and the photograph can.     */
+.sp-qv__value--img {
+  width: 5.6rem;
+  height: 5.6rem;
+  min-height: 0;
+  padding: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.sp-qv__value--img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sp-qv__value--img.is-active {
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--line), 0 0 0 2px var(--on-card);
+}
+
+/*  Fallback when no image resolves to this colour: the swatch hex from the
+    admin, then a neutral chip. A swatch is never empty.                  */
+.sp-qv__value-dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--sw, rgba(31, 26, 22, 0.10));
+}
+
+/* ============================================================
+   Colour filtering
+   ============================================================
+
+   Choosing a colour narrows the gallery to that colour's images plus any
+   image with no colour of its own (scale shots, fabric detail, the room
+   set). Hiding an image outright rather than dimming it is deliberate: a
+   half-visible thumbnail of the wrong colour still reads as available.
+   ============================================================ */
+
+.sp-qv__slide[hidden],
+.sp-qv__thumb[hidden] { display: none; }
+
+/* --- Buy --- */
+
+.sp-qv__form { margin: 0; }
+
+.sp-qv__buy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 0.4rem;
+}
+
+.sp-qv__qty {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sp-qv__qty-btn {
+  width: 4.4rem;
+  height: 5.2rem;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1.6rem;
+  color: var(--on-card);
+  cursor: pointer;
+}
+
+.sp-qv__qty-btn:hover { background: rgba(31, 26, 22, 0.05); }
+
+.sp-qv__qty-input {
+  width: 4rem;
+  height: 5.2rem;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1.4rem;
+  text-align: center;
+  color: var(--on-card);
+  -moz-appearance: textfield;
+}
+
+.sp-qv__qty-input::-webkit-outer-spin-button,
+.sp-qv__qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.sp-qv__add {
+  flex: 1 1 18rem;
+  min-height: 5.2rem;
+  padding: 0 2.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--on-card);
+  font-family: inherit;
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  color: var(--card);
+  cursor: pointer;
+  transition: background 120ms var(--ease);
+}
+
+.sp-qv__add:hover:not(:disabled) { background: var(--bronze); color: #fff; }
+.sp-qv__add:disabled { opacity: 0.45; cursor: not-allowed; }
+.sp-qv__add.is-busy { opacity: 0.6; pointer-events: none; }
+
+.sp-qv__full {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.25rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 120ms var(--ease), gap 120ms var(--ease);
+}
+
+.sp-qv__full:hover { color: var(--on-card); gap: 1.1rem; }
+
+/* --- Focus --- */
+
+.sp-qv-modal a:focus-visible,
+.sp-qv-modal button:focus-visible,
+.sp-qv-modal input:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-qv-modal__scrim,
+  .sp-qv-modal__panel,
+  .sp-qv__slide,
+  .sp-qv__value,
+  .sp-qv__add { transition: none; }
+  .sp-qv-modal__panel { transform: none; }
+}
+
+/* --- Small screens --- */
+
+@media (max-width: 899px) {
+  .sp-qv-modal { padding: 0; place-items: end stretch; }
+
+  .sp-qv-modal__panel {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 2rem 2rem 0 0;
+    transform: translateY(100%);
+  }
+
+  .sp-qv-modal.is-open .sp-qv-modal__panel { transform: none; }
+  .sp-qv__stage { aspect-ratio: 4 / 3; }
+  .sp-qv__thumb { width: 6rem; height: 6rem; }
+  .sp-qv__detail { padding-right: clamp(2rem, 3vw, 3.6rem); }
+  .sp-qv__add { flex: 1 1 100%; }
+}

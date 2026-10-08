@@ -1,0 +1,311 @@
+{
+  "sections": {
+    "hero": {
+      "type": "sp-hero",
+      "settings": {
+        "inset": true,
+        "radius": 24,
+        "ratio_desktop": "2 / 1",
+        "ratio_mobile": "4 / 5",
+        "show_sparks": true,
+        "image_alt": "",
+        "overlay_opacity": 0,
+        "watermark_text": "FreshMart",
+        "watermark_opacity": 100,
+        "watermark_offset": 6,
+        "watermark_inset": 4,
+        "foreground_alt": "",
+        "badge_text": "Same Day Delivery",
+        "badge_rotate": -12,
+        "heading": "",
+        "text": "Shop from thousands of farm-fresh fruits, vegetables, dairy, and daily essentials at unbeatable prices.",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "palette": "champagne",
+        "text_scheme": "dark"
+      }
+    },
+    "image-banner": {
+      "type": "image-banner",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "Welcome"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "Tell your story here."
+          }
+        },
+        "buttons": {
+          "type": "buttons",
+          "settings": {
+            "button_label_1": "Shop all",
+            "button_link_1": ""
+          }
+        }
+      },
+      "block_order": [
+        "heading",
+        "text",
+        "buttons"
+      ],
+      "settings": {}
+    },
+    "featured-collection": {
+      "type": "featured-collection",
+      "settings": {}
+    },
+    "rich-text": {
+      "type": "rich-text",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "About us"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Share what makes your brand different.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "heading",
+        "text"
+      ],
+      "settings": {}
+    },
+    "categories": {
+      "type": "sp-categories",
+      "blocks": {
+        "c1": {
+          "type": "category",
+          "settings": {
+            "collection": "",
+            "label": "Everyday",
+            "heading": "Personal Care",
+            "tint": "#f0e9dd",
+            "button_label": "Shop now"
+          }
+        },
+        "c2": {
+          "type": "category",
+          "settings": {
+            "collection": "",
+            "label": "Wardrobe",
+            "heading": "Fashion",
+            "tint": "#4a3f35"
+          }
+        },
+        "c3": {
+          "type": "category",
+          "settings": {
+            "collection": "",
+            "label": "The Home",
+            "heading": "Kitchen",
+            "tint": "#c9a227"
+          }
+        },
+        "c4": {
+          "type": "category",
+          "settings": {
+            "collection": "",
+            "label": "The Home",
+            "heading": "Appliances",
+            "tint": "#5a4334"
+          }
+        },
+        "c5": {
+          "type": "category",
+          "settings": {
+            "collection": "",
+            "label": "Tech",
+            "heading": "Gadgets",
+            "tint": "#e8dcc2"
+          }
+        },
+        "c6": {
+          "type": "category",
+          "settings": {
+            "collection": "",
+            "label": "All",
+            "heading": "Everything",
+            "tint": "#6b5744",
+            "button_label": "Shop now"
+          }
+        }
+      },
+      "block_order": [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+        "c6"
+      ],
+      "settings": {
+        "eyebrow": "Browse",
+        "heading": "Shop by category",
+        "text": "",
+        "align": "start",
+        "button_label": "Shop now",
+        "default_tints": "#f0e9dd,#4a3f35,#c9a227,#5a4334,#e8dcc2,#6b5744",
+        "radius": 18,
+        "gap": 20,
+        "padding_top": 72,
+        "padding_bottom": 88,
+        "image_fit": "fill",
+        "scrim": 55,
+        "collection_list": []
+      }
+    },
+    "split": {
+      "type": "sp-split",
+      "blocks": {
+        "p1": {
+          "type": "point",
+          "settings": {
+            "value": "10 years",
+            "label": "Guarantee"
+          }
+        },
+        "p2": {
+          "type": "point",
+          "settings": {
+            "value": "6-8 weeks",
+            "label": "Made to order"
+          }
+        },
+        "p3": {
+          "type": "point",
+          "settings": {
+            "value": "Free",
+            "label": "UK delivery"
+          }
+        }
+      },
+      "block_order": [
+        "p1",
+        "p2",
+        "p3"
+      ],
+      "settings": {
+        "eyebrow": "Best sellers",
+        "heading": "Your favourite seat is waiting",
+        "text": "Discover the sofas everyone comes back to. Made to order, delivered to the room of your choice.",
+        "button_label": "Shop best sellers",
+        "button_link": "",
+        "link_label": "Book a showroom visit",
+        "link_url": "",
+        "image_alt": "",
+        "badge_text": "Most loved",
+        "image_ratio": "4 / 3",
+        "media_side": "right",
+        "scheme": "espresso",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "image_fit": "contain",
+        "row_height": 520,
+        "media_inset": 32
+      }
+    },
+    "bestsellers": {
+      "type": "sp-bestsellers",
+      "settings": {
+        "eyebrow": "Most loved",
+        "heading": "Best sellers",
+        "link_label": "View all",
+        "link_url": "",
+        "collection": "",
+        "products_to_show": 4,
+        "columns": 4,
+        "image_ratio": "1 / 1",
+        "image_fit": "contain",
+        "radius": 18,
+        "add_label": "Add to cart",
+        "options_label": "Choose options",
+        "padding_top": 72,
+        "padding_bottom": 88,
+        "show_blurb": true,
+        "tilt": true,
+        "show_colours": true,
+        "colour_limit": 5,
+        "show_wishlist": true,
+        "wish_label": "Save for later",
+        "no_reviews_label": "No reviews yet",
+        "quick_view": true
+      }
+    },
+    "about": {
+      "type": "sp-about",
+      "blocks": {
+        "s1": {
+          "type": "step",
+          "settings": {
+            "title": "The frame",
+            "text": "Beech, kiln-dried for eleven weeks, then jointed and glued by hand."
+          }
+        },
+        "s2": {
+          "type": "step",
+          "settings": {
+            "title": "The suspension",
+            "text": "Serpentine springs laid by eye and tied off one at a time."
+          }
+        },
+        "s3": {
+          "type": "step",
+          "settings": {
+            "title": "The cover",
+            "text": "Cut on the roll, fitted on the frame, stitched in place."
+          }
+        }
+      },
+      "block_order": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "settings": {}
+    },
+    "newsletter": {
+      "type": "sp-newsletter",
+      "blocks": {
+        "n1": {
+          "type": "note",
+          "settings": {
+            "text": "About twice a month"
+          }
+        },
+        "n2": {
+          "type": "note",
+          "settings": {
+            "text": "No third parties"
+          }
+        }
+      },
+      "block_order": [
+        "n1",
+        "n2"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "hero",
+    "categories",
+    "split",
+    "about",
+    "bestsellers",
+    "image-banner",
+    "featured-collection",
+    "rich-text",
+    "newsletter"
+  ]
+}

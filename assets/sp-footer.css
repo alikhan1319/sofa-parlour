@@ -1,0 +1,659 @@
+/* ============================================================
+   Sofa Parlour — Footer
+   ============================================================
+
+   A raised card floating inset on the espresso ground, with the shop's name
+   set at display size behind it and clipped by the page edge — so the card
+   reads as resting on top of the wordmark rather than sitting next to it.
+
+   That overlap is the whole idea, and it only works if three things agree:
+   the card is opaque, the wordmark sits BEHIND it in the stacking order, and
+   the footer clips its own overflow. Change any one and it falls apart.
+
+   Hedvig Letters Sans ships ONE weight and the theme sets
+   font-synthesis-weight: none, so font-weight is inert. Hierarchy comes from
+   size, colour and letter-spacing.
+   ============================================================ */
+
+.sp-ft {
+  --ft-ground: #ffffff;
+  --ft-card: #f6f3ee;
+
+  --ft-ink: #1f1a16;                       /* 12.83 / 11.31 : 1 */
+  --ft-ink-2: rgba(31, 26, 22, 0.72);   /*  7.36 /  6.66 : 1 */
+  --ft-ink-3: rgba(31, 26, 22, 0.62);   /*  4.91 /  4.56 : 1 — still AA */
+
+  --ft-line: rgba(31, 26, 22, 0.12);
+  --ft-edge: rgba(31, 26, 22, 0.60);     /*  3.27 : 1 — control boundaries */
+  --ft-brass: #9a5d06;                     /*  6.40 : 1 */
+
+  --ft-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ft-fast: 160ms;
+
+  --ft-gut: clamp(1.2rem, 3vw, 3.2rem);
+
+  position: relative;
+  padding: var(--sp-ft-pad-t, 72px) 0 0;
+  background-color: var(--ft-ground);
+  color: var(--ft-ink);
+  /* The wordmark is deliberately taller than the room left for it. clip
+     rather than hidden, so the footer never becomes a scroll container. */
+  overflow: clip;
+}
+
+.sp-ft__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 132rem;
+  margin: 0 auto;
+  padding: 0 var(--ft-gut);
+}
+
+/* ------------------------------------------------------------
+   Card
+   ------------------------------------------------------------
+   Opaque on purpose. The wordmark passes underneath it, and a translucent
+   card would show the letterforms through the menu columns.
+   ------------------------------------------------------------ */
+
+.sp-ft__card {
+  /* This is what the "space under the card" setting controls: how much of
+     the wordmark is left showing between the card and the page edge. */
+  margin-bottom: var(--sp-ft-pad-b, 32px);
+  padding: clamp(2.4rem, 4vw, 4.8rem);
+  border: 1px solid var(--ft-line);
+  border-radius: clamp(1.6rem, 2.4vw, 2.8rem);
+  background-color: var(--ft-card);
+  box-shadow: 0 2.4rem 6rem rgba(31, 26, 22, 0.11);
+}
+
+/* ------------------------------------------------------------
+   Top row
+   ------------------------------------------------------------
+   Brand, then one column per menu block, then contact — all direct children
+   of the same flex row rather than nested wrappers, so every column head
+   sits on ONE baseline. Nesting the menus in their own grid would align only
+   each other and drift against the contact column beside them.
+
+   flex-basis rather than fixed grid tracks, because the number of menu
+   blocks is the merchant's choice: one menu and a contact block lay out as
+   sensibly as four menus and none.
+   ------------------------------------------------------------ */
+
+.sp-ft__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(2.8rem, 4vw, 5.6rem);
+  padding-bottom: clamp(2.8rem, 4vw, 4rem);
+}
+
+.sp-ft__brand {
+  flex: 1 1 26rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.6rem;
+  min-width: 0;
+}
+
+.sp-ft__col {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.sp-ft__contact {
+  flex: 1 1 24rem;
+  min-width: 0;
+}
+
+.sp-ft__logo {
+  display: block;
+  width: auto;
+  max-width: 18rem;
+  height: auto;
+}
+
+.sp-ft__mark {
+  margin: 0;
+  font-size: 1.9rem;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  color: var(--ft-ink);
+}
+
+.sp-ft__desc {
+  margin: 0;
+  max-width: 38ch;
+  font-size: 1.3rem;
+  line-height: 1.7;
+  color: var(--ft-ink-2);
+}
+
+/* ------------------------------------------------------------
+   Column heads
+   ------------------------------------------------------------
+   Uppercase, tracked out, with a hairline beneath running the full width of
+   the column. The rule is what makes four columns read as four columns
+   rather than as one block of text in several piles.
+   ------------------------------------------------------------ */
+
+.sp-ft__col-head {
+  margin: 0 0 1.8rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--ft-line);
+  font-family: inherit;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ft-ink);
+}
+
+/*  The brand column's own label. No rule under it — it introduces the icon
+    row directly beneath, not a column, and a second hairline this far left
+    would read as a fifth column head.                                      */
+.sp-ft__eyebrow {
+  margin: 0.6rem 0 0;
+  font-family: inherit;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ft-ink-3);
+}
+
+/* ------------------------------------------------------------
+   Social
+   ------------------------------------------------------------ */
+
+.sp-ft__social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*  Ringed, and the ring is the tap target: 4.4rem clears the 44px guideline
+    on its own, so no invisible pad is needed underneath it.                */
+.sp-ft__soc {
+  display: grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border: 1px solid var(--ft-line);
+  border-radius: 999px;
+  color: var(--ft-ink-2);
+  transition: color var(--ft-fast) var(--ft-ease),
+              border-color var(--ft-fast) var(--ft-ease),
+              background-color var(--ft-fast) var(--ft-ease);
+}
+
+.sp-ft__soc:hover {
+  border-color: var(--ft-brass);
+  background-color: rgba(154, 93, 6, 0.1);
+  color: var(--ft-ink);
+}
+
+/*  Dawn's social snippets ship at their own intrinsic size and fill from
+    currentColor. Constrained here rather than by editing nine shared
+    snippets that other sections also render.                               */
+.sp-ft__soc svg {
+  width: 1.7rem;
+  height: 1.7rem;
+  fill: currentColor;
+}
+
+.sp-ft__shopfollow {
+  display: flex;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+/* ------------------------------------------------------------
+   Menu links
+   ------------------------------------------------------------ */
+
+.sp-ft__links {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-ft__link {
+  font-size: 1.35rem;
+  line-height: 1.4;
+  color: var(--ft-ink-2);
+  text-decoration: none;
+  transition: color var(--ft-fast) var(--ft-ease);
+}
+
+.sp-ft__link:hover,
+.sp-ft__link[aria-current='page'] {
+  color: var(--ft-ink);
+}
+
+/* ------------------------------------------------------------
+   Contact
+   ------------------------------------------------------------ */
+
+.sp-ft__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-ft__fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  min-width: 0;
+}
+
+/*  A ringed badge, the same object as a social button so the two columns
+    agree. flex: 0 0 auto keeps it circular when the address wraps to three
+    lines — without it the badge squashes into an ellipse.                  */
+.sp-ft__fact-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border: 1px solid var(--ft-line);
+  border-radius: 999px;
+  color: var(--ft-brass);
+}
+
+.sp-ft__fact-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  padding-top: 0.2rem;
+}
+
+.sp-ft__fact-label {
+  font-size: 1.05rem;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ft-ink-3);
+}
+
+.sp-ft__fact-value {
+  font-size: 1.35rem;
+  line-height: 1.5;
+  color: var(--ft-ink);
+  text-decoration: none;
+  /* A long address or email must wrap rather than push the column wide */
+  overflow-wrap: anywhere;
+  transition: color var(--ft-fast) var(--ft-ease);
+}
+
+a.sp-ft__fact-value:hover {
+  color: var(--ft-brass);
+}
+
+.sp-ft__fact-value--rte > * {
+  margin: 0;
+}
+
+.sp-ft__fact-value--rte > * + * {
+  margin-top: 0.2rem;
+}
+
+.sp-ft__fact-value--rte a {
+  color: inherit;
+  text-underline-offset: 0.3em;
+}
+
+/* ------------------------------------------------------------
+   Base bar — locale and payment
+   ------------------------------------------------------------ */
+
+/*  Payment row. margin-left:auto on the payment block pushes it right on its
+    own, so the row still reads correctly when the locale selects are off and
+    payment is the only thing in it — justify-content: space-between would
+    leave a lone block stuck on the left.                                    */
+.sp-ft__base {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.6rem 2.4rem;
+  padding: 2.4rem 0;
+  border-top: 1px solid var(--ft-line);
+}
+
+.sp-ft__base-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/*  One pill holding the select and its confirm button — the same shape the
+    newsletter field uses. The pill owns the border and the focus ring; both
+    controls inside it are borderless.
+
+    The select does NOT auto-submit on change, deliberately: on Chrome and
+    Edge, arrow keys move a closed select and fire `change` on every press,
+    so auto-submit would navigate on the first keystroke and make every
+    option below the first unreachable without a mouse.                     */
+.sp-ft__loc {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0.3rem 0.3rem 0.3rem 0;
+  border: 1px solid var(--ft-edge);
+  border-radius: 999px;
+  transition: border-color var(--ft-fast) var(--ft-ease);
+}
+
+.sp-ft__loc:hover {
+  border-color: rgba(31, 26, 22, 0.62);
+}
+
+.sp-ft__loc:focus-within {
+  border-color: var(--ft-brass);
+  box-shadow: 0 0 0 3px rgba(154, 93, 6, 0.22);
+}
+
+/*  A real <select>, styled but not replaced — it keeps native keyboard
+    behaviour and the platform's own picker on a phone.                     */
+.sp-ft__select {
+  min-height: 3.6rem;
+  padding: 0 2.8rem 0 1.4rem;
+  border: 0;
+  background-color: transparent;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 1.6rem) 50%, calc(100% - 1.2rem) 50%;
+  background-size: 0.45rem 0.45rem, 0.45rem 0.45rem;
+  background-repeat: no-repeat;
+  font-family: inherit;
+  font-size: 1.2rem;
+  color: var(--ft-ink-2);
+  cursor: pointer;
+  appearance: none;
+  transition: color var(--ft-fast) var(--ft-ease);
+}
+
+.sp-ft__select:hover {
+  color: var(--ft-ink);
+}
+
+/*  The pill draws the ring for POINTER focus, so the select must not draw a
+    second one inside it. Keyboard focus is left alone on purpose: this rule
+    is (0,2,0) and would beat the shared .sp-ft select:focus-visible at
+    (0,1,1), silently removing the only focus indicator a keyboard user has. */
+.sp-ft__select:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/*  The dropdown list is painted by the OS and does not inherit the page's
+    colours — without this the options render dark-on-dark in some browsers. */
+.sp-ft__select option {
+  background-color: var(--ft-card);
+  color: var(--ft-ink);
+}
+
+/*  Always visible, never hidden behind a JS check. It is the only thing that
+    commits the choice, so it has to be there whatever happens to scripts.   */
+.sp-ft__loc-go {
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background-color: rgba(31, 26, 22, 0.06);
+  color: var(--ft-ink-2);
+  cursor: pointer;
+  transition: background-color var(--ft-fast) var(--ft-ease),
+              color var(--ft-fast) var(--ft-ease);
+}
+
+.sp-ft__loc-go:hover {
+  background-color: var(--ft-brass);
+  color: var(--ft-ground);
+}
+
+/* --- App blocks --- */
+
+.sp-ft__apps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.6rem 2.4rem;
+  padding: 2.4rem 0 0;
+  border-top: 1px solid var(--ft-line);
+}
+
+.sp-ft__app {
+  max-width: 100%;
+}
+
+/* --- Payment --- */
+
+.sp-ft__pay {
+  margin-left: auto;
+  min-width: 0;
+}
+
+.sp-ft__pay-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*  Card marks are full-colour brand SVGs and must not be recoloured — a
+    recoloured Visa mark is no longer a Visa mark. They sit on a cream tile,
+    which is how they are meant to be presented on a dark ground.           */
+.sp-ft__pay-item {
+  display: grid;
+  place-items: center;
+  width: 4.2rem;
+  height: 2.8rem;
+  padding: 0.2rem;
+  border-radius: 0.5rem;
+  background-color: #1f1a16;
+}
+
+.sp-ft__pay-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ------------------------------------------------------------
+   Legal
+   ------------------------------------------------------------ */
+
+.sp-ft__legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem 2rem;
+  padding-top: 2.4rem;
+  border-top: 1px solid var(--ft-line);
+}
+
+.sp-ft__copy {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: var(--ft-ink-3);
+}
+
+.sp-ft__copy a {
+  color: var(--ft-ink-3);
+  text-underline-offset: 0.3em;
+}
+
+.sp-ft__copy a:hover {
+  color: var(--ft-ink-2);
+}
+
+.sp-ft__policies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*  Underlined, unlike the menu links above. These are the legal ones, and
+    the underline is both the convention that marks them as such and what
+    keeps them findable in a row of otherwise identical grey text.          */
+.sp-ft__policy {
+  font-size: 1.2rem;
+  color: var(--ft-ink-3);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  transition: color var(--ft-fast) var(--ft-ease);
+}
+
+.sp-ft__policy:hover {
+  color: var(--ft-ink);
+}
+
+/* ------------------------------------------------------------
+   Wordmark
+   ------------------------------------------------------------
+   Sits behind the card and is cut off by the footer's bottom edge. It is
+   aria-hidden, so its contrast is a surface decision rather than a
+   legibility one — just above the ground and no higher.
+
+   Sized in vw so it always spans the viewport. The negative bottom margin is
+   what does the clipping: the type is laid out at full height, then the
+   footer's own overflow removes the lower part of it.
+   ------------------------------------------------------------ */
+
+.sp-ft__giant {
+  position: relative;
+  z-index: 0;
+  margin: -0.04em 0 -0.3em;
+  font-size: clamp(5.6rem, 19vw, 30rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+  /* The flat fallback, and the base the fade below is built on. Anything
+     that cannot clip a background to text keeps this and still renders a
+     readable wordmark rather than nothing. */
+  color: rgba(31, 26, 22, 0.11);
+}
+
+/*  The letters are painted with a gradient clipped to the glyphs, so the
+    tops read clearly and the feet dissolve into the espresso before the page
+    edge cuts them off. Two things end the wordmark instead of one: the fade
+    finishes the letterforms, the clip finishes the block, and the join
+    between them is invisible.
+
+    Guarded by @supports for a reason that is easy to get wrong: the fade
+    needs `color: transparent` to let the background show through the glyphs,
+    and in a browser without background-clip:text that declaration alone
+    would render the wordmark completely invisible. Inside the guard, the
+    fallback colour above survives untouched.                                */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .sp-ft__giant {
+    background-image: linear-gradient(
+      to bottom,
+      rgba(31, 26, 22, 0.12) 0%,
+      rgba(31, 26, 22, 0.13) 34%,
+      rgba(31, 26, 22, 0.04) 68%,
+      rgba(31, 26, 22, 0) 92%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* ------------------------------------------------------------
+   Focus
+   ------------------------------------------------------------ */
+
+.sp-ft a:focus-visible,
+.sp-ft button:focus-visible,
+.sp-ft select:focus-visible {
+  outline: 2px solid var(--ft-brass);
+  outline-offset: 3px;
+}
+
+/*  border-radius is NOT set on the shared rule above: the outline follows
+    the element's own radius, and forcing 0.2rem would draw a rounded
+    rectangle around the circular confirm button and the social glyphs. */
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-ft__link,
+  .sp-ft__soc,
+  .sp-ft__select,
+  .sp-ft__loc,
+  .sp-ft__loc-go,
+  .sp-ft__policy {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------ */
+
+@media (max-width: 749px) {
+  .sp-ft {
+    padding-top: clamp(3.2rem, 8vw, 5.6rem);
+  }
+
+  /*  Two menu columns side by side rather than one per row: a single
+      column of four links surrounded by whitespace wastes the screen, and
+      the contact block needs the full width for its address. */
+  .sp-ft__col {
+    flex: 1 1 12rem;
+  }
+
+  .sp-ft__contact {
+    flex: 1 1 100%;
+  }
+
+  .sp-ft__legal {
+    justify-content: flex-start;
+  }
+
+  /*  Stacked, "right-aligned" means nothing — everything is full width, so
+      the auto margin is dropped and the icons run from the left with the
+      rest of the column. */
+  .sp-ft__pay {
+    margin-left: 0;
+  }
+
+  .sp-ft__pay-list {
+    justify-content: flex-start;
+  }
+
+  /*  At phone widths the wordmark stops being texture and becomes a wall of
+      letters, so it drops to something closer to a signature and is cut
+      less deeply. */
+  .sp-ft__giant {
+    margin: 0 0 -0.2em;
+    font-size: clamp(3.6rem, 21vw, 9rem);
+  }
+}

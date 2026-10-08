@@ -1,0 +1,11 @@
+# Backup archive (duplicate of the theme files)
+assets.zip
+
+# Shopify CLI
+.shopify/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+node_modules/

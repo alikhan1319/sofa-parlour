@@ -1,0 +1,294 @@
+{%- comment -%}
+  ============================================================
+  Blog
+  ============================================================
+
+  A lead article across the top, then a grid of the rest. A blog where every
+  post is the same size has no editor in it — the lead is how a shop says
+  which piece it actually wants read.
+
+  Everything shown is the article's own: image, title, excerpt, date, author,
+  tags. Reading time is DERIVED from the word count rather than typed in, so
+  it cannot drift away from the piece it describes.
+
+  The lead is simply the first article on page one. On page two and after
+  there is no lead, because "featured" that changes as you paginate is just
+  a bigger card.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-blog.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'sp-reveal.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign s = section.settings
+  assign per_page = s.posts_per_page | default: 9
+-%}
+
+{%- paginate blog.articles by per_page -%}
+  <section
+    class="sp-bl"
+    style="--sp-bl-pad-t: {{ s.padding_top }}px; --sp-bl-pad-b: {{ s.padding_bottom }}px; --sp-bl-cols: {{ s.columns }}; --sp-bl-ratio: {{ s.image_ratio }};"
+  >
+    <div class="sp-bl__inner">
+      <header class="sp-bl__head" data-sp-reveal>
+        {%- if s.eyebrow != blank -%}
+          <p class="sp-bl__eyebrow">{{ s.eyebrow | escape }}</p>
+        {%- endif -%}
+
+        <h1 class="sp-bl__title">{{ s.heading | default: blog.title | escape }}</h1>
+
+        {%- if s.intro != blank -%}
+          <p class="sp-bl__intro">{{ s.intro | escape }}</p>
+        {%- endif -%}
+      </header>
+
+      {%- if blog.articles.size == 0 -%}
+        {%- comment -%}
+          Merchant wording, not a translation key. There is no stock key for
+          an empty blog, and a missing key does not fall back — Shopify
+          renders "Translation missing: ..." which is a non-empty string, so
+          `| default:` never fires and the shopper reads the error.
+        {%- endcomment -%}
+        <p class="sp-bl__empty">{{ s.empty_text | escape }}</p>
+      {%- else -%}
+        {%- liquid
+          comment
+            Only page one gets a lead. A feature that moves as you paginate
+            is not a feature, it is the first card drawn larger.
+          endcomment
+          assign lead = blank
+          if s.show_lead and paginate.current_page == 1
+            assign lead = blog.articles.first
+          endif
+        -%}
+
+        {%- if lead != blank -%}
+          {%- assign a = lead -%}
+          <article class="sp-bl__lead" data-sp-reveal>
+            <a class="sp-bl__lead-media" href="{{ a.url }}" tabindex="-1" aria-hidden="true">
+              {%- if a.image -%}
+                {%- assign lead_alt = '' -%}
+                {{
+                  a.image
+                  | image_url: width: 1600
+                  | image_tag: class: 'sp-bl__img', widths: '500, 800, 1100, 1400, 1600', sizes: '(min-width: 990px) 56vw, 92vw', loading: 'eager', alt: lead_alt
+                }}
+              {%- else -%}
+                <span class="sp-bl__ph"></span>
+              {%- endif -%}
+            </a>
+
+            <div class="sp-bl__lead-copy">
+              {%- render 'sp-article-meta', a: a, s: s, lead: true -%}
+
+              <h2 class="sp-bl__lead-title">
+                <a href="{{ a.url }}">{{ a.title | escape }}</a>
+              </h2>
+
+              {%- if s.show_excerpt and a.excerpt_or_content != blank -%}
+                <p class="sp-bl__lead-text">{{ a.excerpt_or_content | strip_html | truncate: 190 }}</p>
+              {%- endif -%}
+
+              <span class="sp-bl__more" aria-hidden="true">
+                {{ s.read_label | default: 'Read the piece' | escape }}
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </article>
+        {%- endif -%}
+
+        <ul class="sp-bl__grid" role="list">
+          {%- for a in blog.articles -%}
+            {%- if lead != blank and forloop.first -%}
+              {%- continue -%}
+            {%- endif -%}
+
+            <li class="sp-bl__item" style="--i: {{ forloop.index0 }};" data-sp-reveal>
+              <article class="sp-bl__card">
+                <a class="sp-bl__media" href="{{ a.url }}" tabindex="-1" aria-hidden="true">
+                  {%- if a.image -%}
+                    {%- assign card_alt = '' -%}
+                    {{
+                      a.image
+                      | image_url: width: 900
+                      | image_tag: class: 'sp-bl__img', widths: '300, 500, 700, 900', sizes: '(min-width: 990px) 30vw, 92vw', loading: 'lazy', alt: card_alt
+                    }}
+                  {%- else -%}
+                    <span class="sp-bl__ph"></span>
+                  {%- endif -%}
+                </a>
+
+                <div class="sp-bl__body">
+                  {%- render 'sp-article-meta', a: a, s: s, lead: false -%}
+
+                  <h2 class="sp-bl__card-title">
+                    <a href="{{ a.url }}">{{ a.title | escape }}</a>
+                  </h2>
+
+                  {%- if s.show_excerpt and a.excerpt_or_content != blank -%}
+                    <p class="sp-bl__card-text">{{ a.excerpt_or_content | strip_html | truncate: 110 }}</p>
+                  {%- endif -%}
+                </div>
+              </article>
+            </li>
+          {%- endfor -%}
+        </ul>
+
+        {%- if paginate.pages > 1 -%}
+          <div class="sp-bl__pagination">
+            {%- render 'pagination', paginate: paginate -%}
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+  </section>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "Blog",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Journal"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Leave empty to use the blog's own title."
+    },
+    {
+      "type": "text",
+      "id": "intro",
+      "label": "Intro"
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Empty message",
+      "default": "No posts here yet. Do come back."
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_lead",
+      "label": "Feature the newest post",
+      "info": "Shown large across the top of page one.",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns on desktop",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "posts_per_page",
+      "label": "Posts per page",
+      "min": 3,
+      "max": 24,
+      "step": 3,
+      "default": 9
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image shape",
+      "options": [
+        {
+          "value": "4 / 3",
+          "label": "Landscape"
+        },
+        {
+          "value": "1 / 1",
+          "label": "Square"
+        },
+        {
+          "value": "3 / 2",
+          "label": "Wide"
+        }
+      ],
+      "default": "4 / 3"
+    },
+    {
+      "type": "header",
+      "content": "Show"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Author",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tag",
+      "label": "First tag",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_reading_time",
+      "label": "Reading time",
+      "info": "Counted from the post's own words, not typed in.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_excerpt",
+      "label": "Excerpt",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "read_label",
+      "label": "Lead link text",
+      "default": "Read the piece"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 160,
+      "step": 4,
+      "unit": "px",
+      "default": 96
+    }
+  ]
+}
+{% endschema %}

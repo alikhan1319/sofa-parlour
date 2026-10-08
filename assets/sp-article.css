@@ -1,0 +1,542 @@
+/* ============================================================
+   Sofa Parlour — Article
+   ============================================================
+
+   A reading page. Almost all of the work here is typographic: one column at
+   a measure you can actually read, a hero that gets out of the way, and
+   everything else — comment form included — brought into the palette.
+
+   Scoped under .sp-ar, which the section adds to its own <article>. Dawn
+   renders the same comment form and pagination snippet elsewhere, and none
+   of this should reach them.
+
+   Hedvig Letters Sans ships ONE weight and font-synthesis-weight is none, so
+   font-weight is inert. Hierarchy is size, colour and letter-spacing.
+   ============================================================ */
+
+.sp-ar {
+  --ar-ground: #ffffff;
+  --ar-raised: #f6f3ee;
+  --ar-mount: #f6f3ee;
+
+  --ar-ink: #1f1a16;                       /* 12.83 / 11.31 : 1 */
+  --ar-ink-2: rgba(31, 26, 22, 0.72);   /*  7.36 /  6.66 : 1 */
+  --ar-ink-3: rgba(31, 26, 22, 0.62);   /*  4.91 /  4.56 : 1 — still AA */
+
+  --ar-line: rgba(31, 26, 22, 0.12);
+  --ar-edge: rgba(31, 26, 22, 0.60);     /*  3.27 : 1 — control boundaries */
+  --ar-brass: #9a5d06;                     /*  6.40 : 1 */
+
+  --ar-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ar-fast: 160ms;
+
+  /*  The measure. 68ch is the long end of comfortable for continuous prose;
+      past that the eye loses the start of the next line. Everything in the
+      body column is held to it, and only the hero is allowed out. */
+  --ar-measure: 68ch;
+  --ar-gut: clamp(1.6rem, 4vw, 4.8rem);
+
+  display: block;
+  padding-bottom: clamp(4rem, 7vw, 8rem);
+  background-color: var(--ar-ground);
+  color: var(--ar-ink);
+}
+
+/*  One column rule for every direct child, so the header, the body, the
+    navigation and the comments all sit on the same line without each being
+    told its own width. */
+.sp-ar > * {
+  max-width: calc(var(--ar-measure) + var(--ar-gut) * 2);
+  margin-inline: auto;
+  padding-inline: var(--ar-gut);
+}
+
+/* ------------------------------------------------------------
+   Hero
+   ------------------------------------------------------------ */
+
+.sp-ar__hero {
+  max-width: 132rem;
+  margin: 0 auto clamp(2.4rem, 4vw, 4rem);
+  padding-inline: var(--ar-gut);
+}
+
+.sp-ar__hero .media {
+  overflow: hidden;
+  border-radius: 1.6rem;
+  background-color: var(--ar-mount);
+}
+
+.sp-ar__hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ------------------------------------------------------------
+   Header
+   ------------------------------------------------------------ */
+
+.sp-ar__head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding-top: clamp(3.2rem, 5vw, 5.6rem);
+  padding-bottom: clamp(2rem, 3vw, 3.2rem);
+}
+
+.sp-ar__kicker {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.sp-ar__kicker a {
+  color: var(--ar-brass);
+  text-decoration: none;
+  transition: color var(--ar-fast) var(--ar-ease);
+}
+
+.sp-ar__kicker a:hover {
+  color: var(--ar-ink);
+}
+
+.sp-ar__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(2.8rem, 4.6vw, 4.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--ar-ink);
+}
+
+.sp-ar__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.7rem;
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  color: var(--ar-ink-3);
+}
+
+.sp-ar__dot {
+  color: rgba(31, 26, 22, 0.40);
+}
+
+/* ------------------------------------------------------------
+   Body
+   ------------------------------------------------------------
+   The one part of this theme set for reading rather than scanning: larger
+   than the interface type, looser leading, and a measure that holds.
+   ------------------------------------------------------------ */
+
+.sp-ar__body {
+  padding-top: clamp(1.6rem, 3vw, 2.4rem);
+  font-size: clamp(1.5rem, 1.2vw, 1.7rem);
+  line-height: 1.8;
+  color: var(--ar-ink-2);
+}
+
+.sp-ar__body > * {
+  margin: 0;
+}
+
+.sp-ar__body > * + * {
+  margin-top: 1.6rem;
+}
+
+.sp-ar__body h2,
+.sp-ar__body h3,
+.sp-ar__body h4 {
+  margin-top: 3.2rem;
+  font-family: inherit;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ar-ink);
+  text-wrap: balance;
+}
+
+.sp-ar__body h2 { font-size: clamp(2rem, 2.4vw, 2.6rem); }
+.sp-ar__body h3 { font-size: clamp(1.7rem, 2vw, 2rem); }
+.sp-ar__body h4 { font-size: 1.6rem; }
+
+.sp-ar__body a {
+  color: var(--ar-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  transition: color var(--ar-fast) var(--ar-ease);
+}
+
+.sp-ar__body a:hover {
+  color: var(--ar-brass);
+}
+
+.sp-ar__body ul,
+.sp-ar__body ol {
+  padding-left: 2rem;
+}
+
+.sp-ar__body li + li {
+  margin-top: 0.6rem;
+}
+
+/*  An image inside the prose is allowed wider than the measure: a picture
+    at 68ch reads as an illustration squeezed into a column of text. */
+.sp-ar__body img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-block: 2.4rem;
+  border-radius: 1.2rem;
+  background-color: var(--ar-mount);
+}
+
+.sp-ar__body blockquote {
+  margin-block: 2.4rem;
+  padding-left: 1.8rem;
+  border-left: 2px solid var(--ar-brass);
+  font-size: clamp(1.7rem, 1.6vw, 2rem);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  color: var(--ar-ink);
+}
+
+.sp-ar__body hr {
+  margin-block: 3.2rem;
+  border: 0;
+  border-top: 1px solid var(--ar-line);
+}
+
+.sp-ar__body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.35rem;
+}
+
+.sp-ar__body th,
+.sp-ar__body td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--ar-line);
+  text-align: left;
+}
+
+/* ------------------------------------------------------------
+   Post navigation
+   ------------------------------------------------------------ */
+
+.sp-ar__nav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.6rem;
+  align-items: center;
+  margin-top: clamp(3.2rem, 5vw, 5.6rem);
+  padding-top: clamp(2.4rem, 3vw, 3.2rem);
+  border-top: 1px solid var(--ar-line);
+}
+
+@media (min-width: 750px) {
+  .sp-ar__nav {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 2.4rem;
+  }
+}
+
+.sp-ar__nav-side {
+  min-width: 0;
+}
+
+.sp-ar__nav-side--end {
+  text-align: right;
+}
+
+.sp-ar__nav-link {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 100%;
+  text-decoration: none;
+}
+
+.sp-ar__nav-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ar-ink-3);
+}
+
+.sp-ar__nav-link--next .sp-ar__nav-label {
+  justify-content: flex-end;
+}
+
+/*  Each arrow travels the way its link goes, so the direction is felt
+    before the words are read. The label moves, not the whole link: shifting
+    the block would drag the headline under it out of alignment with the one
+    on the other side. */
+.sp-ar__nav-label svg {
+  flex: 0 0 auto;
+  transition: transform var(--ar-fast) var(--ar-ease);
+}
+
+.sp-ar__nav-link--prev:hover .sp-ar__nav-label svg { transform: translateX(-3px); }
+.sp-ar__nav-link--next:hover .sp-ar__nav-label svg { transform: translateX(3px); }
+
+.sp-ar__nav-title {
+  /*  Two lines then ellipsis: a long headline here would push the row out
+      of shape and unbalance the two sides against each other. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 1.4rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ar-ink);
+  transition: color var(--ar-fast) var(--ar-ease);
+}
+
+.sp-ar__nav-link:hover .sp-ar__nav-title {
+  color: var(--ar-brass);
+}
+
+.sp-ar__nav-all {
+  justify-self: center;
+  min-height: 4.4rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1.8rem;
+  border: 1px solid var(--ar-edge);
+  border-radius: 999px;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  color: var(--ar-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color var(--ar-fast) var(--ar-ease),
+              background-color var(--ar-fast) var(--ar-ease);
+}
+
+.sp-ar__nav-all:hover {
+  border-color: var(--ar-brass);
+  background-color: rgba(154, 93, 6, 0.1);
+}
+
+/* ------------------------------------------------------------
+   Comments
+   ------------------------------------------------------------
+   Dawn's markup, brought into the palette. The form itself is untouched —
+   it carries its own validation, moderation states and success message.
+   ------------------------------------------------------------ */
+
+.sp-ar .article-template__comment-wrapper {
+  margin-top: clamp(3.2rem, 5vw, 5.6rem);
+  padding-top: clamp(2.4rem, 3vw, 3.2rem);
+  border-top: 1px solid var(--ar-line);
+  background: transparent;
+}
+
+.sp-ar .article-template__comments-wrapper h2,
+.sp-ar .article-template__comment-wrapper h2 {
+  font-family: inherit;
+  font-size: clamp(1.8rem, 2.2vw, 2.2rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ar-ink);
+}
+
+.sp-ar .article-template__comments {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.sp-ar .article-template__comments .comment {
+  padding: 1.6rem;
+  border: 1px solid var(--ar-line);
+  border-radius: 1.2rem;
+  background-color: var(--ar-raised);
+  font-size: 1.35rem;
+  line-height: 1.65;
+  color: var(--ar-ink-2);
+}
+
+.sp-ar .comment__author {
+  font-size: 1.3rem;
+  color: var(--ar-ink);
+}
+
+.sp-ar .comment__date {
+  color: var(--ar-ink-3);
+}
+
+/* --- Form --- */
+
+.sp-ar .field__input,
+.sp-ar .text-area {
+  width: 100%;
+  min-height: 5rem;
+  padding: 1.2rem 1.4rem;
+  border: 1px solid var(--ar-edge);
+  border-radius: 1rem;
+  background-color: var(--ar-raised);
+  box-shadow: none;
+  font-family: inherit;
+  font-size: 1.35rem;
+  line-height: 1.6;
+  color: var(--ar-ink);
+}
+
+.sp-ar .field__input::placeholder,
+.sp-ar .text-area::placeholder {
+  color: var(--ar-ink-3);
+}
+
+.sp-ar .field__input:focus,
+.sp-ar .text-area:focus {
+  border-color: var(--ar-brass);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(154, 93, 6, 0.22);
+}
+
+/*  Dawn floats its labels over the input. That works on a light ground; on
+    espresso the label sits on the field's own fill and doubles with the
+    placeholder, so it is taken out of the flow and read by screen readers
+    only. The placeholder carries the visible name. */
+.sp-ar .field__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sp-ar .article-template__comment-fields {
+  display: grid;
+  gap: 1.2rem;
+}
+
+@media (min-width: 750px) {
+  .sp-ar .article-template__comment-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sp-ar .field {
+  position: relative;
+  margin: 0;
+}
+
+.sp-ar form .button,
+.sp-ar .article-template__comment-wrapper .button {
+  min-height: 5rem;
+  padding: 0 2.4rem;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--ar-ink);
+  font-family: inherit;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color var(--ar-fast) var(--ar-ease);
+}
+
+.sp-ar form .button::after {
+  display: none;
+}
+
+.sp-ar form .button:hover {
+  background-color: var(--ar-brass);
+}
+
+/*  Brass, not red: the palette holds no red, and a form error is a
+    correction rather than an alarm. */
+.sp-ar .form__message,
+.sp-ar .form-status-list,
+.sp-ar .form-status {
+  font-size: 1.3rem;
+  color: var(--ar-brass);
+}
+
+.sp-ar .form-status-list a {
+  color: var(--ar-brass);
+  text-underline-offset: 0.3em;
+}
+
+.sp-ar .article-template__comment-warning {
+  font-size: 1.2rem;
+  color: var(--ar-ink-3);
+}
+
+/* --- Comment pagination --- */
+
+.sp-ar .pagination__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 2.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sp-ar .pagination__item {
+  display: grid;
+  place-items: center;
+  min-width: 4.4rem;
+  height: 4.4rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  color: var(--ar-ink-2);
+  text-decoration: none;
+}
+
+.sp-ar .pagination__item:hover {
+  border-color: var(--ar-edge);
+  color: var(--ar-ink);
+}
+
+.sp-ar .pagination__item--current {
+  border-color: var(--ar-brass);
+  color: var(--ar-ink);
+}
+
+/* ------------------------------------------------------------
+   Focus
+   ------------------------------------------------------------ */
+
+.sp-ar a:focus-visible,
+.sp-ar button:focus-visible,
+.sp-ar input:focus-visible,
+.sp-ar textarea:focus-visible {
+  outline: 2px solid var(--ar-brass);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-ar__kicker a,
+  .sp-ar__body a,
+  .sp-ar__nav-title,
+  .sp-ar__nav-label svg,
+  .sp-ar__nav-all,
+  .sp-ar form .button {
+    transition: none;
+  }
+
+  .sp-ar__nav-link--prev:hover .sp-ar__nav-label svg,
+  .sp-ar__nav-link--next:hover .sp-ar__nav-label svg { transform: none; }
+}

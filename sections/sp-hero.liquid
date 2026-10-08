@@ -1,0 +1,389 @@
+{%- comment -%}
+  ============================================================
+  Hero — gradient card with fitted watermark and cut-out
+  ============================================================
+
+  Layers, bottom to top:
+
+    1  gradient ground (+ optional photograph)
+    2  watermark word   — fitted to the frame width
+    3  cut-out subject  — the word passes BEHIND this
+    4  badge, copy, product card
+
+  THE WATERMARK IS SVG, NOT TEXT, and that is deliberate.
+
+  CSS cannot fit a word to a width. text-align-last: justify expands word
+  SPACES, so it does nothing at all to a single word like "FreshMart" — the
+  word just sits at its natural size. SVG <text> with textLength equal to the
+  viewBox width and lengthAdjust="spacingAndGlyphs" fits any string, one word
+  or several, to exactly the frame width in every browser.
+
+  The viewBox height is derived from the character count so a long name gets
+  proportionally shorter letters instead of a stretched box. It is still real
+  text: selectable, searchable, and it uses the store font.
+  ============================================================
+{%- endcomment -%}
+
+{{ 'sp-hero.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign img_d = section.settings.image_desktop
+  assign img_m = section.settings.image_mobile
+  assign img_f = section.settings.image_foreground
+  assign mark = section.settings.watermark_text
+  assign card_product = all_products[section.settings.card_product]
+
+  assign alt_text = section.settings.image_alt
+  if alt_text == blank
+    assign alt_text = img_d.alt | default: shop.name
+  endif
+  assign fg_alt = section.settings.foreground_alt | default: ''
+
+  assign ratio_d = section.settings.ratio_desktop | default: '2 / 1'
+  assign ratio_m = section.settings.ratio_mobile | default: '4 / 5'
+  assign full_class = ''
+  if ratio_d == 'full'
+    assign full_class = ' sp-hero--fullscreen'
+  endif
+
+  assign inset_class = ''
+  if section.settings.inset
+    assign inset_class = ' sp-hero-outer--inset'
+  endif
+
+  comment
+    Named schemes, so the whole card can be re-pitched in one click instead
+    of six colour pickers being nudged into agreement. Custom hands control
+    back to the pickers below.
+  endcomment
+  assign scheme = section.settings.palette | default: 'espresso'
+  case scheme
+    when 'champagne'
+      assign c_from = '#3d332a'
+      assign c_to = '#2a231d'
+      assign c_mark = '#f0e9dd'
+      assign c_badge_bg = '#c9a227'
+      assign c_badge_fg = '#2a231d'
+      assign c_btn_bg = '#c9a227'
+      assign c_btn_fg = '#2a231d'
+      assign c_copy = 'light'
+    when 'espresso'
+      assign c_from = '#4a3f35'
+      assign c_to = '#2a231d'
+      assign c_mark = '#c9a227'
+      assign c_badge_bg = '#c9a227'
+      assign c_badge_fg = '#2a231d'
+      assign c_btn_bg = '#c9a227'
+      assign c_btn_fg = '#2a231d'
+      assign c_copy = 'light'
+    when 'ivory'
+      assign c_from = '#f4eee2'
+      assign c_to = '#e0d3bd'
+      assign c_mark = '#ffffff'
+      assign c_badge_bg = '#2a231d'
+      assign c_badge_fg = '#f0e9dd'
+      assign c_btn_bg = '#2a231d'
+      assign c_btn_fg = '#f0e9dd'
+      assign c_copy = 'dark'
+    when 'slate'
+      assign c_from = '#3a3a36'
+      assign c_to = '#232320'
+      assign c_mark = '#f0e9dd'
+      assign c_badge_bg = '#c9a227'
+      assign c_badge_fg = '#2a231d'
+      assign c_btn_bg = '#c9a227'
+      assign c_btn_fg = '#2a231d'
+      assign c_copy = 'light'
+    else
+      assign c_from = section.settings.gradient_start | default: '#4a3f35'
+      assign c_to = section.settings.gradient_end | default: '#2a231d'
+      assign c_mark = section.settings.watermark_color | default: '#2a231d'
+      assign c_badge_bg = section.settings.badge_bg | default: '#c9a227'
+      assign c_badge_fg = section.settings.badge_color | default: '#4a3f35'
+      assign c_btn_bg = section.settings.button_bg | default: '#c9a227'
+      assign c_btn_fg = section.settings.button_color | default: '#2a231d'
+      assign c_copy = section.settings.text_scheme | default: 'dark'
+  endcase
+
+  comment
+    Geometry for the fitted watermark. The viewBox is a fixed 1000 units wide
+    and the text is forced to that width, so only the HEIGHT has to adapt:
+    more characters means a smaller face to span the same distance.
+  endcomment
+  assign mark_len = mark | size
+  if mark_len < 4
+    assign mark_len = 4
+  endif
+  assign mark_fs = 2000 | divided_by: mark_len
+  assign mark_vb = mark_fs | times: 118 | divided_by: 100
+  assign mark_base = mark_fs | times: 88 | divided_by: 100
+-%}
+
+<div class="sp-hero-outer{{ inset_class }}">
+  <section
+    class="sp-hero sp-hero--{{ c_copy }}{{ full_class }}"
+    id="sp-hero-{{ section.id }}"
+    style="
+      --sp-hero-ratio: {{ ratio_d }};
+      --sp-hero-ratio-mob: {{ ratio_m }};
+      --sp-hero-radius: {{ section.settings.radius | default: 24 }}px;
+      --sp-hero-from: {{ c_from }};
+      --sp-hero-to: {{ c_to }};
+      --sp-hero-mark-color: {{ c_mark }};
+      --sp-hero-mark-opacity: {{ section.settings.watermark_opacity | default: 100 | divided_by: 100.0 }};
+      --sp-hero-mark-top: {{ section.settings.watermark_offset | default: 6 }}%;
+      --sp-hero-mark-inset: {{ section.settings.watermark_inset | default: 4 }}%;
+      --sp-hero-scrim: {{ section.settings.overlay_opacity | default: 0 | divided_by: 100.0 }};
+      --sp-hero-btn-bg: {{ c_btn_bg }};
+      --sp-hero-btn-fg: {{ c_btn_fg }};
+    "
+  >
+    {%- comment -%} 1 — ground {%- endcomment -%}
+    <div class="sp-hero__bg">
+      {%- if img_d != blank or img_m != blank -%}
+        <picture class="sp-hero__pic">
+          {%- if img_m != blank -%}
+            {%- capture srcset_m -%}
+              {{ img_m | image_url: width: 500 }} 500w,
+              {{ img_m | image_url: width: 750 }} 750w,
+              {{ img_m | image_url: width: 1100 }} 1100w,
+              {{ img_m | image_url: width: 1500 }} 1500w
+            {%- endcapture -%}
+            <source media="(max-width: 749px)" srcset="{{ srcset_m | strip_newlines }}" sizes="100vw">
+          {%- endif -%}
+          {%- if img_d != blank -%}
+            {%- capture srcset_d -%}
+              {{ img_d | image_url: width: 900 }} 900w,
+              {{ img_d | image_url: width: 1400 }} 1400w,
+              {{ img_d | image_url: width: 1900 }} 1900w,
+              {{ img_d | image_url: width: 2600 }} 2600w
+            {%- endcapture -%}
+            <source media="(min-width: 750px)" srcset="{{ srcset_d | strip_newlines }}" sizes="100vw">
+          {%- endif -%}
+          {%- assign fallback = img_d | default: img_m -%}
+          <img
+            class="sp-hero__img"
+            src="{{ fallback | image_url: width: 1900 }}"
+            alt="{{ alt_text | escape }}"
+            width="{{ fallback.width }}"
+            height="{{ fallback.height }}"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+          >
+        </picture>
+      {%- endif -%}
+
+      {%- if section.settings.overlay_opacity > 0 -%}
+        <span class="sp-hero__scrim" aria-hidden="true"></span>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} Decorative sparks, purely graphic {%- endcomment -%}
+    {%- if section.settings.show_sparks -%}
+      <div class="sp-hero__sparks" aria-hidden="true">
+        <svg class="sp-hero__spark sp-hero__spark--a" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5 10.6 12 12-7 1.4-11.3 5.7-12 12-.7-6.3-5-10.6-12-12 7-1.4 11.3-5.7 12-12Z"/></svg>
+        <svg class="sp-hero__spark sp-hero__spark--b" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5 10.6 12 12-7 1.4-11.3 5.7-12 12-.7-6.3-5-10.6-12-12 7-1.4 11.3-5.7 12-12Z"/></svg>
+        <svg class="sp-hero__spark sp-hero__spark--c" viewBox="0 0 24 24"><path d="M12 0c.7 6.3 5 10.6 12 12-7 1.4-11.3 5.7-12 12-.7-6.3-5-10.6-12-12 7-1.4 11.3-5.7 12-12Z"/></svg>
+      </div>
+    {%- endif -%}
+
+    {%- comment -%}
+      2 — watermark. aria-hidden: it is a graphic device. If it says something
+      the shopper needs, that belongs in the heading.
+    {%- endcomment -%}
+    {%- if mark != blank -%}
+      <div class="sp-hero__mark-wrap" aria-hidden="true">
+        <svg
+          class="sp-hero__mark"
+          viewBox="0 0 1000 {{ mark_vb }}"
+          preserveAspectRatio="xMidYMid meet"
+          focusable="false"
+          role="presentation"
+        >
+          <text
+            x="0"
+            y="{{ mark_base }}"
+            font-size="{{ mark_fs }}"
+            textLength="1000"
+            lengthAdjust="spacingAndGlyphs"
+          >{{ mark | escape }}</text>
+        </svg>
+      </div>
+    {%- endif -%}
+
+    {%- comment -%} 3 — the cut-out the watermark passes behind {%- endcomment -%}
+    {%- if img_f != blank -%}
+      <div class="sp-hero__fg">
+        {{
+          img_f
+          | image_url: width: 2000
+          | image_tag:
+            class: 'sp-hero__fg-img',
+            widths: '700, 1000, 1400, 2000',
+            sizes: '(min-width: 750px) 70vw, 100vw',
+            loading: 'eager',
+            fetchpriority: 'high',
+            alt: fg_alt
+        }}
+      </div>
+    {%- endif -%}
+
+    {%- comment -%} 4 — badge {%- endcomment -%}
+    {%- if section.settings.badge_text != blank -%}
+      <span
+        class="sp-hero__badge"
+        style="--sp-badge-rotate: {{ section.settings.badge_rotate | default: -12 }}deg; --sp-badge-bg: {{ c_badge_bg }}; --sp-badge-fg: {{ c_badge_fg }};"
+      >
+        {{ section.settings.badge_text | escape }}
+      </span>
+    {%- endif -%}
+
+    {%- comment -%} 4 — copy {%- endcomment -%}
+    {%- if section.settings.text != blank or section.settings.heading != blank or section.settings.button_label != blank -%}
+      <div class="sp-hero__copy">
+        {%- if section.settings.heading != blank -%}
+          <h2 class="sp-hero__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+        {%- if section.settings.text != blank -%}
+          <p class="sp-hero__text">{{ section.settings.text | escape }}</p>
+        {%- endif -%}
+        {%- if section.settings.button_label != blank -%}
+          <a
+            class="sp-hero__btn"
+            {% if section.settings.button_link != blank %}href="{{ section.settings.button_link }}"{% else %}role="link" aria-disabled="true"{% endif %}
+          >
+            <span>{{ section.settings.button_label | escape }}</span>
+            <span class="sp-hero__btn-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M5 12h13M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    {%- comment -%} 4 — product card, from a real product {%- endcomment -%}
+    {%- if card_product != blank -%}
+      {%- assign card_variant = card_product.selected_or_first_available_variant -%}
+      <a href="{{ card_product.url }}" class="sp-hero__card">
+        <span class="sp-hero__card-media">
+          {%- if card_product.featured_media != blank -%}
+            {%- assign card_alt = card_product.featured_media.alt | default: card_product.title -%}
+            {{
+              card_product.featured_media
+              | image_url: width: 500
+              | image_tag: widths: '200, 320, 500', sizes: '180px', loading: 'lazy', alt: card_alt
+            }}
+          {%- endif -%}
+        </span>
+        <span class="sp-hero__card-body">
+          <span class="sp-hero__card-title">{{ card_product.title | escape }}</span>
+          <span class="sp-hero__card-price">
+            <span class="sp-hero__card-now">{{ card_variant.price | money }}</span>
+            {%- if card_variant.compare_at_price > card_variant.price -%}
+              <s class="sp-hero__card-was">{{ card_variant.compare_at_price | money }}</s>
+            {%- endif -%}
+          </span>
+        </span>
+      </a>
+    {%- endif -%}
+  </section>
+</div>
+
+{% schema %}
+{
+  "name": "Hero",
+  "settings": [
+    { "type": "header", "content": "Frame" },
+    { "type": "checkbox", "id": "inset", "label": "Rounded card", "default": true },
+    { "type": "range", "id": "radius", "label": "Corner radius", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 24 },
+    {
+      "type": "select",
+      "id": "ratio_desktop",
+      "label": "Shape on large screens",
+      "options": [
+        { "value": "2 / 1", "label": "Wide 2:1" },
+        { "value": "16 / 9", "label": "Landscape 16:9" },
+        { "value": "2.4 / 1", "label": "Cinematic 2.4:1" },
+        { "value": "3 / 2", "label": "Classic 3:2" },
+        { "value": "full", "label": "Full screen" }
+      ],
+      "default": "2 / 1"
+    },
+    {
+      "type": "select",
+      "id": "ratio_mobile",
+      "label": "Shape on small screens",
+      "options": [
+        { "value": "4 / 5", "label": "Portrait 4:5" },
+        { "value": "1 / 1", "label": "Square" },
+        { "value": "3 / 4", "label": "Tall 3:4" }
+      ],
+      "default": "4 / 5"
+    },
+    { "type": "header", "content": "Colour" },
+    {
+      "type": "select",
+      "id": "palette",
+      "label": "Scheme",
+      "info": "Sets the gradient, watermark, badge and button together. Choose Custom to use the pickers below.",
+      "options": [
+        { "value": "espresso", "label": "Espresso — deep brown, brass type" },
+        { "value": "champagne", "label": "Champagne — brown to espresso, cream word" },
+        { "value": "slate", "label": "Slate — warm charcoal, brass" },
+        { "value": "ivory", "label": "Ivory — light card on a dark page" },
+        { "value": "custom", "label": "Custom" }
+      ],
+      "default": "espresso"
+    },
+    { "type": "header", "content": "Custom colours" },
+    { "type": "paragraph", "content": "Used only when Scheme is set to Custom." },
+    { "type": "color", "id": "gradient_start", "label": "Gradient from", "default": "#4a3f35" },
+    { "type": "color", "id": "gradient_end", "label": "Gradient to", "default": "#2a231d" },
+    { "type": "checkbox", "id": "show_sparks", "label": "Show sparkles", "default": true },
+    { "type": "paragraph", "content": "Images are optional. With none, the gradient is the background." },
+    { "type": "image_picker", "id": "image_desktop", "label": "Image, large screens" },
+    { "type": "image_picker", "id": "image_mobile", "label": "Image, small screens" },
+    { "type": "text", "id": "image_alt", "label": "Image description" },
+    { "type": "range", "id": "overlay_opacity", "label": "Darken image", "min": 0, "max": 70, "step": 2, "unit": "%", "default": 0 },
+    { "type": "header", "content": "Watermark" },
+    { "type": "paragraph", "content": "Always fitted to the full width of the frame. A longer name is set smaller so it still spans edge to edge." },
+    { "type": "text", "id": "watermark_text", "label": "Text", "default": "FreshMart" },
+    { "type": "color", "id": "watermark_color", "label": "Watermark colour", "default": "#2a231d" },
+    { "type": "range", "id": "watermark_opacity", "label": "Opacity", "min": 4, "max": 100, "step": 2, "unit": "%", "default": 100 },
+    { "type": "range", "id": "watermark_offset", "label": "Distance from top", "min": 0, "max": 45, "step": 1, "unit": "%", "default": 6 },
+    { "type": "range", "id": "watermark_inset", "label": "Side margin", "min": 0, "max": 20, "step": 1, "unit": "%", "default": 4 },
+    { "type": "header", "content": "Cut-out subject" },
+    { "type": "paragraph", "content": "A transparent PNG placed in front of the watermark, so the word passes behind it." },
+    { "type": "image_picker", "id": "image_foreground", "label": "Cut-out image" },
+    { "type": "text", "id": "foreground_alt", "label": "Cut-out description" },
+    { "type": "header", "content": "Badge" },
+    { "type": "text", "id": "badge_text", "label": "Text", "default": "Same Day Delivery" },
+    { "type": "color", "id": "badge_bg", "label": "Badge background", "default": "#c9a227" },
+    { "type": "color", "id": "badge_color", "label": "Badge text", "default": "#4a3f35" },
+    { "type": "range", "id": "badge_rotate", "label": "Tilt", "min": -20, "max": 20, "step": 1, "default": -12 },
+    { "type": "header", "content": "Copy" },
+    { "type": "text", "id": "heading", "label": "Heading" },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "Shop from thousands of farm-fresh fruits, vegetables, dairy, and daily essentials at unbeatable prices." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop Now" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "color", "id": "button_bg", "label": "Button background", "default": "#c9a227" },
+    { "type": "color", "id": "button_color", "label": "Button text", "default": "#2a231d" },
+    {
+      "type": "select",
+      "id": "text_scheme",
+      "label": "Copy colour",
+      "options": [
+        { "value": "light", "label": "Light — for darker backgrounds" },
+        { "value": "dark", "label": "Dark — for lighter backgrounds" }
+      ],
+      "default": "dark"
+    },
+    { "type": "header", "content": "Product card" },
+    { "type": "product", "id": "card_product", "label": "Product", "info": "Shown bottom right. Leave empty to hide." }
+  ],
+  "presets": [{ "name": "Hero" }]
+}
+{% endschema %}
